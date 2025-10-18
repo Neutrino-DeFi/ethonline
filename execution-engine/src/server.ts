@@ -47,7 +47,7 @@ class Server {
     }));
 
     // Compression middleware
-    this.app.use(compression());
+    this.app.use(compression() as any);
 
     // Rate limiting
     const limiter = rateLimit({
