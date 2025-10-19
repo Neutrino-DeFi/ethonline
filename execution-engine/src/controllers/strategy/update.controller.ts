@@ -8,7 +8,7 @@ import logger from '../../utils/logger';
 
 /**
  * @swagger
- * /api/strategy/{strategyId}:
+ * /api/strategies/strategy/{strategyId}:
  *   put:
  *     summary: Update strategy metadata or its agent configs
  *     tags: [Strategies]

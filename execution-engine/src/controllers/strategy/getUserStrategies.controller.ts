@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { Strategy } from '../../models/strategy.model';
 import { ForbiddenError, ValidationError } from '../../utils/errors';
 import { AuthenticatedRequest } from '../../middleware/auth';
@@ -6,7 +6,7 @@ import logger from '../../utils/logger';
 
 /**
  * @swagger
- * /api/strategies/{userId}:
+ * /api/strategies/user/{userId}:
  *   get:
  *     summary: Fetch all strategies of a user with populated agent configs
  *     tags: [Strategies]
@@ -70,19 +70,19 @@ import logger from '../../utils/logger';
  *       403:
  *         description: Forbidden - Cannot access other user strategies
  */
-export const getUserStrategies = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const getUserStrategies = async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId } = req.params;
-    const currentUserId = req.user?.id;
+    // const currentUserId = req.user?.id;
 
-    if (!currentUserId) {
-      throw new ValidationError('User not authenticated');
-    }
+    // if (!currentUserId) {
+    //   throw new ValidationError('User not authenticated');
+    // }
 
     // Users can only access their own strategies
-    if (userId !== currentUserId) {
-      throw new ForbiddenError('Access denied: Cannot access other user strategies');
-    }
+    // if (userId !== currentUserId) {
+    //   throw new ForbiddenError('Access denied: Cannot access other user strategies');
+    // }
 
     const strategies = await Strategy.find({ userId })
       .populate({
@@ -124,7 +124,7 @@ export const getUserStrategies = async (req: AuthenticatedRequest, res: Response
     logger.error('Error retrieving user strategies', {
       error: error instanceof Error ? error.message : 'Unknown error',
       userId: req.params['userId'],
-      currentUserId: req.user?.id,
+      // currentUserId: req.user?.id,
     });
     throw error;
   }

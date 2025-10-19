@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { UserAgentConfig } from '../../models/userAgentConfig.model';
 import { ForbiddenError, NotFoundError, ValidationError } from '../../utils/errors';
 import { AuthenticatedRequest } from '../../middleware/auth';
@@ -29,12 +29,12 @@ import logger from '../../utils/logger';
  *       404:
  *         description: Not Found
  */
-export const getUserAgentConfigById = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const getUserAgentConfigById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { configId } = req.params;
-    const currentUserId = req.user?.id;
+    // const currentUserId = req.user?.id;
 
-    if (!currentUserId) throw new ValidationError('User not authenticated');
+    // if (!currentUserId) throw new ValidationError('User not authenticated');
 
     const cfg = await UserAgentConfig.findById(configId)
       .populate('agentId', 'name type weightage prompt')
@@ -43,7 +43,7 @@ export const getUserAgentConfigById = async (req: AuthenticatedRequest, res: Res
     if (!cfg) throw new NotFoundError('User agent config not found');
 
     const strategy = cfg.strategyId as any;
-    if (strategy.userId.toString() !== currentUserId) throw new ForbiddenError('Access denied');
+    // if (strategy.userId.toString() !== currentUserId) throw new ForbiddenError('Access denied');
 
     res.status(200).json({
       _id: cfg._id,

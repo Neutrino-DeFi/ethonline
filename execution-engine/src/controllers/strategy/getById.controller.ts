@@ -1,12 +1,12 @@
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { Strategy } from '../../models/strategy.model';
 import { ForbiddenError, NotFoundError, ValidationError } from '../../utils/errors';
-import { AuthenticatedRequest } from '../../middleware/auth';
+// import { AuthenticatedRequest } from '../../middleware/auth';
 import logger from '../../utils/logger';
 
 /**
  * @swagger
- * /api/strategy/{strategyId}:
+ * /api/strategies/strategy/{strategyId}:
  *   get:
  *     summary: Fetch single strategy with all agent configs populated
  *     tags: [Strategies]
@@ -70,14 +70,19 @@ import logger from '../../utils/logger';
  *       404:
  *         description: Strategy not found
  */
-export const getStrategyById = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const getStrategyById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { strategyId } = req.params;
-    const currentUserId = req.user?.id;
+    logger.info('Retrieved strategy', {
+      strategyId,
+      // userId: currentUserId,
+    });
 
-    if (!currentUserId) {
-      throw new ValidationError('User not authenticated');
-    }
+    // const currentUserId = req.user?.id;
+
+    // if (!currentUserId) {
+    //   throw new ValidationError('User not authenticated');
+    // }
 
     const strategy = await Strategy.findById(strategyId)
       .populate({
@@ -93,9 +98,9 @@ export const getStrategyById = async (req: AuthenticatedRequest, res: Response):
     }
 
     // Users can only access their own strategies
-    if (strategy.userId.toString() !== currentUserId) {
-      throw new ForbiddenError('Access denied: Cannot access other user strategies');
-    }
+    // if (strategy.userId.toString() !== currentUserId) {
+    //   throw new ForbiddenError('Access denied: Cannot access other user strategies');
+    // }
 
     const strategyResponse = {
       _id: strategy._id,
@@ -119,7 +124,7 @@ export const getStrategyById = async (req: AuthenticatedRequest, res: Response):
 
     logger.info('Retrieved strategy', {
       strategyId,
-      userId: currentUserId,
+      // userId: currentUserId,
     });
 
     res.status(200).json(strategyResponse);
@@ -127,7 +132,6 @@ export const getStrategyById = async (req: AuthenticatedRequest, res: Response):
     logger.error('Error retrieving strategy', {
       error: error instanceof Error ? error.message : 'Unknown error',
       strategyId: req.params['strategyId'],
-      userId: req.user?.id,
     });
     throw error;
   }

@@ -6,13 +6,13 @@ import { updateUserAgentConfig, getUserAgentConfigById, deleteUserAgentConfig } 
 const router = Router();
 
 // PATCH /api/user-agent-config/:configId
-router.patch('/:configId', auth, asyncHandler(updateUserAgentConfig));
+router.patch('/:configId', asyncHandler(updateUserAgentConfig));
 
 // GET /api/user-agent-config/:configId
-router.get('/:configId', auth, asyncHandler(getUserAgentConfigById));
+router.get('/:configId', asyncHandler(getUserAgentConfigById));
 
 // DELETE /api/user-agent-config/:configId
-router.delete('/:configId', auth, asyncHandler(deleteUserAgentConfig));
+router.delete('/:configId', asyncHandler(deleteUserAgentConfig));
 
 export default router;
 

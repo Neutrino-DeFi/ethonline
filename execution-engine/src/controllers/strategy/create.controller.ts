@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { Strategy } from '../../models/strategy.model';
 import { UserAgentConfig } from '../../models/userAgentConfig.model';
 import { Agent } from '../../models/agent.model';
@@ -24,11 +24,16 @@ import logger from '../../utils/logger';
  *             required:
  *               - name
  *               - agents
+ *               - userId
  *             properties:
  *               name:
  *                 type: string
  *                 description: Name of the strategy
  *                 example: "BTC EMA Crossover"
+ *               userId:
+ *                 type: string
+ *                 description: "user id"
+ *                 example: "1"  
  *               description:
  *                 type: string
  *                 description: Description of the strategy
@@ -89,10 +94,10 @@ import logger from '../../utils/logger';
  *       404:
  *         description: User or agent not found
  */
-export const createStrategy = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const createStrategy = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, description, agents } = req.body;
-    const userId = req.user?.id;
+    const { name, description, agents, userId } = req.body;
+    // const userId = req.user?.id;
 
     if (!userId) {
       throw new ValidationError('User not authenticated');
@@ -180,7 +185,7 @@ export const createStrategy = async (req: AuthenticatedRequest, res: Response): 
   } catch (error) {
     logger.error('Error creating strategy', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      userId: req.user?.id,
+      // userId: req.user?.id,
       body: req.body,
     });
     throw error;

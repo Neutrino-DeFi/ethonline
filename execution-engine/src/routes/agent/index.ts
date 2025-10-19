@@ -6,7 +6,7 @@ import {
   updateAgent,
   deleteAgent,
 } from '../../controllers/agent';
-import { auth, isAdmin } from '../../middleware/auth';
+// import { auth, isAdmin } from '../../middleware/auth';
 import { asyncHandler } from '../../middleware/errorHandler';
 
 const router = Router();
@@ -19,7 +19,7 @@ const router = Router();
  */
 
 // POST /api/agents - Create a new base agent (admin only)
-router.post('/', auth, isAdmin, asyncHandler(createAgent));
+router.post('/', asyncHandler(createAgent));
 
 // GET /api/agents - List all base agents
 router.get('/', asyncHandler(getAllAgents));
@@ -28,9 +28,9 @@ router.get('/', asyncHandler(getAllAgents));
 router.get('/:id', asyncHandler(getAgentById));
 
 // PUT /api/agents/:id - Update agent (admin only)
-router.put('/:id', auth, isAdmin, asyncHandler(updateAgent));
+router.put('/:id', asyncHandler(updateAgent));
 
 // DELETE /api/agents/:id - Delete agent (admin only)
-router.delete('/:id', auth, isAdmin, asyncHandler(deleteAgent));
+router.delete('/:id', asyncHandler(deleteAgent));
 
 export default router;
