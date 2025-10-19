@@ -6,6 +6,7 @@ const UserAgentConfigSchema = new Schema({
   agentId: { type: Schema.Types.ObjectId, ref: "Agent", required: true },
   votingPower: { type: Number, required: true },
   customPrompt: { type: String },
+  code: { type: Schema.Types.Mixed },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
