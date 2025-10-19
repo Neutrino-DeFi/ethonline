@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import healthRoutes from './health';
 import userRoutes from './user';
+import agentRoutes from './agent';
+import strategyRoutes from './strategy';
+import userAgentConfigRoutes from './userAgentConfig';
 
 const router = Router();
 
@@ -8,7 +11,16 @@ const router = Router();
 router.use('/health', healthRoutes);
 
 // Mount user route modules
-router.use('/api/v1/user', userRoutes)
+router.use('/api/v1/user', userRoutes);
+
+// Mount agent route modules
+router.use('/api/agents', agentRoutes);
+
+// Mount strategy route modules
+router.use('/api/strategies', strategyRoutes);
+
+// Mount user agent config route modules
+router.use('/api/user-agent-config', userAgentConfigRoutes);
 
 // API routes placeholder
 router.use('/api/v1', (req, res) => {

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { User } from "../models/user.model";
+import { User } from "../../models/user.model";
 
 // import { PrivyClient } from "@privy-io/node";
 import { PrivyClient } from "@privy-io/server-auth";
@@ -13,6 +13,34 @@ const privy = new PrivyClient(
   process.env["NEXT_PUBLIC_PRIVY_APP_SECRET"] || ""
 );
 
+/**
+ * @swagger
+ * /api/v1/user/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - uniqueWalletId
+ *               - walletAddress
+ *             properties:
+ *               uniqueWalletId:
+ *                 type: string
+ *               walletAddress:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User created
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
 export const registerUser = async (req: Request, res: Response) => {
   try {
     const authHeader = req.headers.authorization || "";

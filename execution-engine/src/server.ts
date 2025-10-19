@@ -9,6 +9,7 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { requestIdMiddleware, requestLoggerMiddleware, morganMiddleware } from './middleware/requestLogger';
 import routes from './routes';
 import database from './config/database';
+import { setupSwagger } from './config/swagger';
 
 class Server {
   private app: Application;
@@ -89,6 +90,9 @@ class Server {
         uptime: Math.floor(process.uptime()),
       });
     });
+
+    // Setup Swagger documentation
+    setupSwagger(this.app);
 
     // Mount API routes
     this.app.use(routes);

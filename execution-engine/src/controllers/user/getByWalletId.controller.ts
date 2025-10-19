@@ -1,6 +1,27 @@
 import { Request, Response } from "express";
-import { User } from "../models/user.model";
+import { User } from "../../models/user.model";
 
+/**
+ * @swagger
+ * /api/v1/user/{uniqueWalletId}:
+ *   get:
+ *     summary: Get user by unique wallet ID
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: uniqueWalletId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Unique wallet ID (e.g., Privy DID)
+ *     responses:
+ *       200:
+ *         description: User found
+ *       400:
+ *         description: Missing uniqueWalletId
+ *       404:
+ *         description: User not found
+ */
 export const getUserByWalletId = async (
   req: Request,
   res: Response

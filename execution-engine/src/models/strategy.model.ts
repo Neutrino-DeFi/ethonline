@@ -1,0 +1,12 @@
+import { Schema, model } from "mongoose";
+
+const StrategySchema = new Schema({
+  userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  name: { type: String, required: true },
+  description: { type: String },
+  agentConfigs: [{ type: Schema.Types.ObjectId, ref: "UserAgentConfig" }],
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+export const Strategy = model("Strategy", StrategySchema);
