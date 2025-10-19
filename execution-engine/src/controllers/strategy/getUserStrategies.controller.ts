@@ -35,6 +35,9 @@ import logger from '../../utils/logger';
  *                     type: string
  *                   description:
  *                     type: string
+ *                   risk:
+ *                     type: string
+ *                     enum: [High, Medium, Low]
  *                   agentConfigs:
  *                     type: array
  *                     items:
@@ -46,6 +49,8 @@ import logger from '../../utils/logger';
  *                           type: number
  *                         customPrompt:
  *                           type: string
+ *                         code:
+ *                           type: object
  *                         agentId:
  *                           type: object
  *                           properties:
@@ -98,10 +103,12 @@ export const getUserStrategies = async (req: Request, res: Response): Promise<vo
       _id: strategy._id,
       name: strategy.name,
       description: strategy.description,
+      risk: strategy.risk,
       agentConfigs: strategy.agentConfigs.map((config: any) => ({
         _id: config._id,
         votingPower: config.votingPower,
         customPrompt: config.customPrompt,
+        code: config.code,
         agentId: {
           _id: config.agentId._id,
           name: config.agentId.name,

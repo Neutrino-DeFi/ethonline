@@ -34,6 +34,10 @@ import logger from '../../utils/logger';
  *               description:
  *                 type: string
  *                 description: Strategy description
+ *               risk:
+ *                 type: string
+ *                 enum: [High, Medium, Low]
+ *                 description: Risk level of the strategy
  *               agents:
  *                 type: array
  *                 items:
@@ -53,6 +57,9 @@ import logger from '../../utils/logger';
  *                     customPrompt:
  *                       type: string
  *                       description: Custom prompt override
+ *                     code:
+ *                       type: object
+ *                       description: Optional JSON code configuration
  *     responses:
  *       200:
  *         description: Strategy updated successfully
@@ -95,7 +102,7 @@ import logger from '../../utils/logger';
 export const updateStrategy = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { strategyId } = req.params;
-    const { name, description, agents } = req.body;
+    const { name, description, agents, risk } = req.body;
     const currentUserId = req.user?.id;
 
     if (!currentUserId) {
@@ -115,6 +122,12 @@ export const updateStrategy = async (req: AuthenticatedRequest, res: Response): 
     // Update basic fields
     if (name) strategy.name = name;
     if (description !== undefined) strategy.description = description;
+    if (risk) {
+      if (!['High', 'Medium', 'Low'].includes(risk)) {
+        throw new ValidationError('Risk must be one of: High, Medium, Low');
+      }
+      strategy.risk = risk;
+    }
 
     // Update agents if provided
     if (agents && Array.isArray(agents)) {
@@ -147,6 +160,7 @@ export const updateStrategy = async (req: AuthenticatedRequest, res: Response): 
           agentId: agent.agentId,
           votingPower: agent.votingPower,
           customPrompt: agent.customPrompt || '',
+          code: agent.code,
           createdAt: new Date(),
           updatedAt: new Date(),
         });
@@ -173,6 +187,7 @@ export const updateStrategy = async (req: AuthenticatedRequest, res: Response): 
         _id: updatedStrategy._id,
         name: updatedStrategy.name,
         description: updatedStrategy.description,
+        risk: updatedStrategy.risk,
         agentConfigs: updatedStrategy.agentConfigs,
         createdAt: updatedStrategy.createdAt,
         updatedAt: updatedStrategy.updatedAt,

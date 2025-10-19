@@ -32,6 +32,9 @@ import logger from '../../utils/logger';
  *                 maximum: 1
  *               customPrompt:
  *                 type: string
+ *               code:
+ *                 type: object
+ *                 description: Optional JSON code configuration
  *     responses:
  *       200:
  *         description: Agent config updated successfully
@@ -45,15 +48,15 @@ import logger from '../../utils/logger';
 export const updateUserAgentConfig = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { configId } = req.params;
-    const { votingPower, customPrompt } = req.body;
+    const { votingPower, customPrompt, code } = req.body;
     const currentUserId = req.user?.id;
 
     if (!currentUserId) {
       throw new ValidationError('User not authenticated');
     }
 
-    if (votingPower === undefined && customPrompt === undefined) {
-      throw new ValidationError('Provide votingPower or customPrompt');
+    if (votingPower === undefined && customPrompt === undefined && code === undefined) {
+      throw new ValidationError('Provide votingPower, customPrompt, or code');
     }
 
     if (votingPower !== undefined && (votingPower < 0 || votingPower > 1)) {
@@ -70,6 +73,7 @@ export const updateUserAgentConfig = async (req: AuthenticatedRequest, res: Resp
 
     if (votingPower !== undefined) config.votingPower = votingPower;
     if (customPrompt !== undefined) config.customPrompt = customPrompt;
+    if (code !== undefined) config.code = code;
     config.updatedAt = new Date();
 
     const updated = await config.save();
@@ -82,6 +86,7 @@ export const updateUserAgentConfig = async (req: AuthenticatedRequest, res: Resp
         _id: updated._id,
         votingPower: updated.votingPower,
         customPrompt: updated.customPrompt,
+        code: updated.code,
         agentId: updated.agentId,
         strategyId: updated.strategyId,
         userId: updated.userId,

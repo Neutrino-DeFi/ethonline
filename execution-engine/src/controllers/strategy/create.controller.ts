@@ -25,6 +25,7 @@ import logger from '../../utils/logger';
  *               - name
  *               - agents
  *               - userId
+ *               - risk
  *             properties:
  *               name:
  *                 type: string
@@ -33,11 +34,16 @@ import logger from '../../utils/logger';
  *               userId:
  *                 type: string
  *                 description: "user id"
- *                 example: "1"  
+ *                 example: "1"
  *               description:
  *                 type: string
  *                 description: Description of the strategy
  *                 example: "Goes long when EMA7 crosses EMA30 upward"
+ *               risk:
+ *                 type: string
+ *                 enum: [High, Medium, Low]
+ *                 description: Risk level of the strategy
+ *                 example: "Medium"
  *               agents:
  *                 type: array
  *                 items:
@@ -57,6 +63,9 @@ import logger from '../../utils/logger';
  *                     customPrompt:
  *                       type: string
  *                       description: Custom prompt override for this agent
+ *                     code:
+ *                       type: object
+ *                       description: Optional JSON code configuration
  *     responses:
  *       201:
  *         description: Strategy created successfully
@@ -96,7 +105,7 @@ import logger from '../../utils/logger';
  */
 export const createStrategy = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, description, agents, userId } = req.body;
+    const { name, description, agents, userId, risk } = req.body;
     // const userId = req.user?.id;
 
     if (!userId) {
@@ -106,6 +115,11 @@ export const createStrategy = async (req: Request, res: Response): Promise<void>
     // Validate required fields
     if (!name || !agents || !Array.isArray(agents) || agents.length === 0) {
       throw new ValidationError('Missing required fields: name and agents array');
+    }
+
+    // Validate risk field
+    if (!risk || !['High', 'Medium', 'Low'].includes(risk)) {
+      throw new ValidationError('Risk must be one of: High, Medium, Low');
     }
 
     // Validate agents array
@@ -136,6 +150,7 @@ export const createStrategy = async (req: Request, res: Response): Promise<void>
       userId,
       name,
       description,
+      risk,
       agentConfigs: [],
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -152,6 +167,7 @@ export const createStrategy = async (req: Request, res: Response): Promise<void>
         agentId: agent.agentId,
         votingPower: agent.votingPower,
         customPrompt: agent.customPrompt || '',
+        code: agent.code,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -177,6 +193,7 @@ export const createStrategy = async (req: Request, res: Response): Promise<void>
         _id: savedStrategy._id,
         name: savedStrategy.name,
         description: savedStrategy.description,
+        risk: savedStrategy.risk,
         agentConfigs: agentConfigs,
         createdAt: savedStrategy.createdAt,
         updatedAt: savedStrategy.updatedAt,

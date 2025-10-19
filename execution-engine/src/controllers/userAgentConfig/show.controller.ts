@@ -49,6 +49,7 @@ export const getUserAgentConfigById = async (req: Request, res: Response): Promi
       _id: cfg._id,
       votingPower: cfg.votingPower,
       customPrompt: cfg.customPrompt,
+      code: cfg.code,
       agentId: {
         _id: (cfg.agentId as any)._id,
         name: (cfg.agentId as any).name,
