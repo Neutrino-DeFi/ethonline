@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { config } from '../config/environment';
 import { HealthCheckResponse } from '../types';
 import { asyncHandler } from '../middleware/errorHandler';
+import database from '../config/database';
 
 const router = Router();
 
@@ -91,5 +92,31 @@ router.get('/live', asyncHandler(async (req: Request, res: Response) => {
     uptime: Math.floor(process.uptime()),
   });
 }));
+
+// Database health check endpoint
+router.get('/database', asyncHandler(async (req: Request, res: Response) => {
+  const dbHealth = await database.healthCheck();
+
+  const statusCode = dbHealth.status === 'healthy' ? 200 : 503;
+
+  res.status(statusCode).json({
+    timestamp: new Date().toISOString(),
+    database: {
+      ...dbHealth,
+      readyStateDescription: getReadyStateDescription(dbHealth.readyState),
+    },
+  });
+}));
+
+// Helper function to describe mongoose connection ready state
+const getReadyStateDescription = (state: number): string => {
+  const states: { [key: number]: string } = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting',
+  };
+  return states[state] || 'unknown';
+};
 
 export default router;

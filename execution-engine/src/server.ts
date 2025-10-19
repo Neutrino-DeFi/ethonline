@@ -8,6 +8,7 @@ import logger from './utils/logger';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { requestIdMiddleware, requestLoggerMiddleware, morganMiddleware } from './middleware/requestLogger';
 import routes from './routes';
+import database from './config/database';
 
 class Server {
   private app: Application;
@@ -101,7 +102,16 @@ class Server {
     this.app.use(errorHandler);
   }
 
-  public start(): void {
+  public async start(): Promise<void> {
+    // Connect to MongoDB first
+    try {
+      await database.connect();
+      logger.info('Database connection established');
+    } catch (error) {
+      logger.error('Failed to connect to database, exiting...');
+      process.exit(1);
+    }
+
     // Graceful shutdown handlers
     process.on('SIGTERM', this.gracefulShutdown.bind(this));
     process.on('SIGINT', this.gracefulShutdown.bind(this));
@@ -120,9 +130,16 @@ class Server {
     });
   }
 
-  private gracefulShutdown(signal: string): void {
+  private async gracefulShutdown(signal: string): Promise<void> {
     logger.info(`Received ${signal}, starting graceful shutdown`);
-    
+
+    // Disconnect from database
+    try {
+      await database.disconnect();
+    } catch (error) {
+      logger.error('Error during database disconnection');
+    }
+
     // Give ongoing requests time to complete
     setTimeout(() => {
       logger.info('Graceful shutdown completed');
