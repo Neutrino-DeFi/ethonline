@@ -26,9 +26,14 @@ export const createStrategy = async (userId: string, strategyData: any) => {
   }
 };
 
-export const updateStrategy = async (strategyId: string, strategyData: any) => {
+export const updateStrategy = async (
+  userId: string,
+  strategyId: string,
+  strategyData: any
+) => {
   try {
     const payload = {
+      userId,
       name: strategyData.name,
       description: strategyData.description,
       risk: strategyData.risk,

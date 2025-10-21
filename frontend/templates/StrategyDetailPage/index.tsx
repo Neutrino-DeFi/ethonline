@@ -151,9 +151,9 @@ const StrategyDetailPage = ({ strategyId }: StrategyDetailPageProps) => {
             </div>
             <div className="flex gap-3">
               <button
-                onClick={() =>
-                  router.push(`/strategies/${strategyId}/configure`)
-                }
+                onClick={() => {
+                  router.push(`/strategies/${strategyId}/configure`);
+                }}
                 className="px-6 py-3 border border-theme-stroke hover:bg-theme-on-surface-2 text-theme-primary rounded-xl transition-colors"
               >
                 Configure

@@ -49,11 +49,11 @@ export const updateUserAgentConfig = async (req: AuthenticatedRequest, res: Resp
   try {
     const { configId } = req.params;
     const { votingPower, customPrompt, code } = req.body;
-    const currentUserId = req.user?.id;
+    // const currentUserId = req.user?.id;
 
-    if (!currentUserId) {
-      throw new ValidationError('User not authenticated');
-    }
+    // if (!currentUserId) {
+    //   throw new ValidationError('User not authenticated');
+    // }
 
     if (votingPower === undefined && customPrompt === undefined && code === undefined) {
       throw new ValidationError('Provide votingPower, customPrompt, or code');
@@ -67,9 +67,9 @@ export const updateUserAgentConfig = async (req: AuthenticatedRequest, res: Resp
     if (!config) throw new NotFoundError('User agent config not found');
 
     const strategy = config.strategyId as any;
-    if (strategy.userId.toString() !== currentUserId) {
-      throw new ForbiddenError('Access denied');
-    }
+    // if (strategy.userId.toString() !== currentUserId) {
+    //   throw new ForbiddenError('Access denied');
+    // }
 
     if (votingPower !== undefined) config.votingPower = votingPower;
     if (customPrompt !== undefined) config.customPrompt = customPrompt;
@@ -78,7 +78,8 @@ export const updateUserAgentConfig = async (req: AuthenticatedRequest, res: Resp
 
     const updated = await config.save();
 
-    logger.info('User agent config updated', { configId, userId: currentUserId });
+    // logger.info('User agent config updated', { configId, userId: currentUserId });
+    logger.info('User agent config updated', { configId,  });
 
     res.status(200).json({
       message: 'Agent config updated successfully',
