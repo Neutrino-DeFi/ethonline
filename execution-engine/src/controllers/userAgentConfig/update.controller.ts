@@ -92,7 +92,8 @@ export const updateUserAgentConfig = async (
 
     const updated = await config.save();
 
-    logger.info("User agent config updated", { configId });
+    // logger.info('User agent config updated', { configId, userId: currentUserId });
+    logger.info('User agent config updated', { configId,  });
 
     res.status(200).json({
       message: "Agent config updated successfully",

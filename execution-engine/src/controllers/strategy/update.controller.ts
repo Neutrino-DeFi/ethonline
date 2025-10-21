@@ -155,7 +155,6 @@ export const updateStrategy = async (req: AuthenticatedRequest, res: Response): 
       const agentConfigs = [];
       for (const agent of agents) {
         const userAgentConfig = new UserAgentConfig({
-          // userId: currentUserId,
           userId: userId,
           strategyId: strategy._id,
           agentId: agent.agentId,
@@ -198,7 +197,7 @@ export const updateStrategy = async (req: AuthenticatedRequest, res: Response): 
     logger.error('Error updating strategy', {
       error: error instanceof Error ? error.message : 'Unknown error',
       strategyId: req.params['strategyId'],
-      userId: req.user?.id,
+      // userId: req.user?.id,
       body: req.body,
     });
     throw error;

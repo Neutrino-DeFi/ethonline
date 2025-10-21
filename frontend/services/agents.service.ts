@@ -1,10 +1,10 @@
 import axios from "axios";
 
-const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:4000/";
+const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:4000";
 
 export const getAllAgents = async () => {
   try {
-    const response = await axios.post(
+    const response = await axios.get(
       `${API_BASE_URL}/api/agents`
     );
 

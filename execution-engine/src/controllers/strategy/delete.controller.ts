@@ -76,7 +76,7 @@ export const deleteStrategy = async (req: AuthenticatedRequest, res: Response): 
     logger.error('Error deleting strategy', {
       error: error instanceof Error ? error.message : 'Unknown error',
       strategyId: req.params['strategyId'],
-      userId: req.user?.id,
+      // userId: req.user?.id,
     });
     throw error;
   }

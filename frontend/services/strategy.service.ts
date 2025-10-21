@@ -1,9 +1,11 @@
 import axios from "axios";
 
-const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:4000/";
+const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:4000";
 
 export const createStrategy = async (userId: string, strategyData: any) => {
   try {
+    console.log("Creating strategy with data:", strategyData);
+    console.log("For user ID:", userId);
     const payload = {
       name: strategyData.name,
       userId: userId,
@@ -24,9 +26,14 @@ export const createStrategy = async (userId: string, strategyData: any) => {
   }
 };
 
-export const updateStrategy = async (strategyId: string, strategyData: any) => {
+export const updateStrategy = async (
+  userId: string,
+  strategyId: string,
+  strategyData: any
+) => {
   try {
     const payload = {
+      userId,
       name: strategyData.name,
       description: strategyData.description,
       risk: strategyData.risk,
