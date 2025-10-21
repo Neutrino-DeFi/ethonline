@@ -23,6 +23,7 @@ const envSchema = Joi.object({
   HEALTH_CHECK_INTERVAL: Joi.number().default(30000), // 30 seconds
   APP_NAME: Joi.string().default('execution-engine'),
   APP_VERSION: Joi.string().default('1.0.0'),
+  SWAGGER_SERVER_URL: Joi.string().default('http://localhost:4000'),
 }).unknown();
 
 // Validate environment variables
@@ -60,6 +61,7 @@ export const config = {
     name: envVars.APP_NAME,
     version: envVars.APP_VERSION,
   },
+  swaggerUrl: envVars.SWAGGER_SERVER_URL,
 } as const;
 
 export default config;
