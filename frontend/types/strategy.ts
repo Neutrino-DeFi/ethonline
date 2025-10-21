@@ -357,9 +357,17 @@ class MACDSignal(Strategy):
     },
 ];
 
-export type AgenticConfig = {
-    weightage: number;
+export type AgentConfig = {
     prompt: string;
+    weightage?: number; // Only for Technical, Sentiment, WebSearch agents
+};
+
+export type AgenticConfig = {
+    supervisor: AgentConfig;
+    executor: AgentConfig;
+    technical: AgentConfig;
+    sentiment: AgentConfig;
+    webSearch: AgentConfig;
 };
 
 export type Position = {

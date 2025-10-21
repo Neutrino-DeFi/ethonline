@@ -6,12 +6,21 @@ import Layout from "@/components/Layout";
 import Card from "@/components/Card";
 import Icon from "@/components/Icon";
 import {
+    Slider,
+    SliderTrack,
+    SliderFilledTrack,
+    SliderThumb,
+    Box,
+    Text,
+} from "@chakra-ui/react";
+import {
     Strategy,
     TECHNICAL_STRATEGIES,
     TechnicalStrategy,
     RiskLevel,
     CodeLanguage,
     BacktestResult,
+    AgentConfig,
 } from "@/types/strategy";
 
 type AIConfigurationPageProps = {
@@ -35,9 +44,13 @@ const AIConfigurationPage = ({ strategyId }: AIConfigurationPageProps) => {
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Form state
-    const [agenticPrompt, setAgenticPrompt] = useState("");
-    const [agenticWeightage, setAgenticWeightage] = useState(50);
+    // Form state - 5 agents
+    const [supervisor, setSupervisor] = useState<AgentConfig>({ prompt: "" });
+    const [executor, setExecutor] = useState<AgentConfig>({ prompt: "" });
+    const [technical, setTechnical] = useState<AgentConfig>({ prompt: "", weightage: 33 });
+    const [sentiment, setSentiment] = useState<AgentConfig>({ prompt: "", weightage: 33 });
+    const [webSearch, setWebSearch] = useState<AgentConfig>({ prompt: "", weightage: 34 });
+
     const [riskLevel, setRiskLevel] = useState<RiskLevel>("medium");
     const [selectedTechnicalStrategies, setSelectedTechnicalStrategies] = useState<
         TechnicalStrategy[]
@@ -79,8 +92,24 @@ const AIConfigurationPage = ({ strategyId }: AIConfigurationPageProps) => {
                 const found = strategies.find((s) => s.id === strategyId);
                 if (found) {
                     setStrategy(found);
-                    setAgenticPrompt(found.agenticConfig.prompt);
-                    setAgenticWeightage(found.agenticConfig.weightage);
+
+                    // Load agent configs
+                    if (found.agenticConfig.supervisor) {
+                        setSupervisor(found.agenticConfig.supervisor);
+                    }
+                    if (found.agenticConfig.executor) {
+                        setExecutor(found.agenticConfig.executor);
+                    }
+                    if (found.agenticConfig.technical) {
+                        setTechnical(found.agenticConfig.technical);
+                    }
+                    if (found.agenticConfig.sentiment) {
+                        setSentiment(found.agenticConfig.sentiment);
+                    }
+                    if (found.agenticConfig.webSearch) {
+                        setWebSearch(found.agenticConfig.webSearch);
+                    }
+
                     setRiskLevel(found.riskLevel);
                     setSelectedTechnicalStrategies(found.technicalStrategies);
                     setVisibility(found.visibility);
@@ -103,8 +132,11 @@ const AIConfigurationPage = ({ strategyId }: AIConfigurationPageProps) => {
         const updatedStrategy: Strategy = {
             ...strategy,
             agenticConfig: {
-                weightage: agenticWeightage,
-                prompt: agenticPrompt,
+                supervisor,
+                executor,
+                technical,
+                sentiment,
+                webSearch,
             },
             technicalStrategies: selectedTechnicalStrategies,
             riskLevel,
@@ -130,8 +162,12 @@ const AIConfigurationPage = ({ strategyId }: AIConfigurationPageProps) => {
 
     const handleCancel = () => {
         if (!strategy) return;
-        setAgenticPrompt(strategy.agenticConfig.prompt);
-        setAgenticWeightage(strategy.agenticConfig.weightage);
+
+        setSupervisor(strategy.agenticConfig.supervisor);
+        setExecutor(strategy.agenticConfig.executor);
+        setTechnical(strategy.agenticConfig.technical);
+        setSentiment(strategy.agenticConfig.sentiment);
+        setWebSearch(strategy.agenticConfig.webSearch);
         setRiskLevel(strategy.riskLevel);
         setSelectedTechnicalStrategies(strategy.technicalStrategies);
         setVisibility(strategy.visibility);
@@ -391,6 +427,10 @@ class ${customStrategyName.replace(/\s+/g, "")}(Strategy):
         setShowEditStrategyModal(false);
     };
 
+    // Weightage validation
+    const weightageSum = (technical.weightage || 0) + (sentiment.weightage || 0) + (webSearch.weightage || 0);
+    const isWeightageValid = weightageSum === 100;
+
     if (!strategy) {
         return (
             <Layout title="Loading...">
@@ -420,7 +460,7 @@ class ${customStrategyName.replace(/\s+/g, "")}(Strategy):
                                 </button>
                                 <div>
                                     <h1 className="text-h4 text-theme-primary">
-                                        Configure AI Agent
+                                        Configure AI Agents
                                     </h1>
                                     <p className="text-base-2 text-theme-secondary">
                                         {strategy.name}
@@ -446,8 +486,8 @@ class ${customStrategyName.replace(/\s+/g, "")}(Strategy):
                                     </button>
                                     <button
                                         onClick={handleSave}
-                                        disabled={isSaving}
-                                        className="px-6 py-3 bg-primary-1 hover:bg-primary-2 text-white rounded-xl transition-colors disabled:opacity-50"
+                                        disabled={isSaving || !isWeightageValid}
+                                        className="px-6 py-3 bg-primary-1 hover:bg-primary-2 text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {isSaving ? "Saving..." : "Save Changes"}
                                     </button>
@@ -457,65 +497,527 @@ class ${customStrategyName.replace(/\s+/g, "")}(Strategy):
                     </div>
                 </Card>
 
-                {/* AI Prompt Configuration */}
-                <Card title="Sentiment Agent Prompt">
-                    <div className="space-y-4">
-                        <p className="text-base-2 text-theme-secondary">
-                            Customize the AI agent's decision-making instructions and market analysis
-                            behavior.
-                        </p>
-                        {isEditing ? (
-                            <textarea
-                                value={agenticPrompt}
-                                onChange={(e) => setAgenticPrompt(e.target.value)}
-                                rows={6}
-                                className="w-full px-4 py-3 bg-theme-on-surface-1 border border-theme-stroke rounded-xl text-base-2 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors resize-none"
-                                placeholder="Enter custom instructions for the AI agent..."
-                            />
-                        ) : (
-                            <div className="p-4 bg-theme-on-surface-1 border border-theme-stroke rounded-xl">
-                                <p className="text-base-2 text-theme-primary whitespace-pre-wrap">
-                                    {agenticPrompt || "No custom prompt configured"}
-                                </p>
-                            </div>
-                        )}
-                    </div>
-                </Card>
-
-                {/* Weightage Configuration */}
-                <Card title="Strategy Weightage Distribution">
-                    <div className="space-y-4">
-                        <p className="text-base-2 text-theme-secondary">
-                            Adjust the influence balance between AI agent decisions and technical
-                            indicator signals.
-                        </p>
-                        <div className="space-y-3">
+                {/* AI Agents Configuration */}
+                <Card title="AI Agents Configuration">
+                    <div className="space-y-8">
+                        {/* Weightage Summary */}
+                        <div className={`p-4 rounded-xl border-2 ${
+                            isWeightageValid
+                                ? "border-green-500 bg-green-500/10"
+                                : weightageSum > 100
+                                    ? "border-red-500 bg-red-500/10"
+                                    : "border-yellow-500 bg-yellow-500/10"
+                        }`}>
                             <div className="flex items-center justify-between">
-                                <span className="text-base-2 text-theme-primary">
-                                    Sentiment: {agenticWeightage}%
-                                </span>
-                                <span className="text-base-2 text-theme-primary">
-                                    Technical: {100 - agenticWeightage}%
+                                <div className="flex items-center gap-2">
+                                    <Icon
+                                        className={`w-5 h-5 ${
+                                            isWeightageValid
+                                                ? "fill-green-500"
+                                                : "fill-yellow-500"
+                                        }`}
+                                        name={isWeightageValid ? "check" : "alert"}
+                                    />
+                                    <span className="text-base-2 text-theme-primary font-semibold">
+                                        Total Weightage: {weightageSum}%
+                                    </span>
+                                </div>
+                                <span className={`text-caption-2 ${
+                                    isWeightageValid
+                                        ? "text-green-600"
+                                        : weightageSum > 100
+                                            ? "text-red-600"
+                                            : "text-yellow-600"
+                                }`}>
+                                    {isWeightageValid
+                                        ? "Perfect! Ready to save"
+                                        : weightageSum > 100
+                                            ? `Reduce by ${weightageSum - 100}%`
+                                            : `Add ${100 - weightageSum}% more`
+                                    }
                                 </span>
                             </div>
-                            <input
-                                type="range"
-                                min="0"
-                                max="100"
-                                value={agenticWeightage}
-                                onChange={(e) => setAgenticWeightage(parseInt(e.target.value))}
-                                disabled={!isEditing}
-                                className="w-full h-2 bg-theme-on-surface-1 rounded-lg appearance-none cursor-pointer disabled:cursor-not-allowed"
-                                style={{
-                                    background: isEditing
-                                        ? `linear-gradient(to right, #6C5DD3 0%, #6C5DD3 ${agenticWeightage}%, #E6E8EC ${agenticWeightage}%, #E6E8EC 100%)`
-                                        : undefined,
-                                }}
-                            />
-                            <div className="flex items-center justify-between text-caption-2 text-theme-tertiary">
-                                <span>More Technical</span>
-                                <span>More AI-Driven</span>
+                        </div>
+
+                        {/* Supervisor Agent */}
+                        <div className="p-6 bg-theme-on-surface-1 rounded-xl border border-theme-stroke">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
+                                    <Icon className="w-5 h-5 fill-orange-500" name="settings" />
+                                </div>
+                                <div>
+                                    <h4 className="text-title-2 text-theme-primary font-semibold">
+                                        Supervisor Agent
+                                    </h4>
+                                    <p className="text-caption-2 text-theme-tertiary">
+                                        Oversees and coordinates other agents
+                                    </p>
+                                </div>
                             </div>
+                            {isEditing ? (
+                                <textarea
+                                    value={supervisor.prompt}
+                                    onChange={(e) => setSupervisor({ ...supervisor, prompt: e.target.value })}
+                                    rows={4}
+                                    className="w-full px-4 py-3 bg-theme-on-surface-2 border border-theme-stroke rounded-xl text-base-2 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors resize-none"
+                                    placeholder="Enter custom instructions for the supervisor agent..."
+                                />
+                            ) : (
+                                <div className="p-4 bg-theme-on-surface-2 border border-theme-stroke rounded-xl">
+                                    <p className="text-base-2 text-theme-primary whitespace-pre-wrap">
+                                        {supervisor.prompt || "No custom prompt configured"}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Executor Agent */}
+                        <div className="p-6 bg-theme-on-surface-1 rounded-xl border border-theme-stroke">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                                    <Icon className="w-5 h-5 fill-indigo-500" name="trade" />
+                                </div>
+                                <div>
+                                    <h4 className="text-title-2 text-theme-primary font-semibold">
+                                        Executor Agent
+                                    </h4>
+                                    <p className="text-caption-2 text-theme-tertiary">
+                                        Executes trading decisions
+                                    </p>
+                                </div>
+                            </div>
+                            {isEditing ? (
+                                <textarea
+                                    value={executor.prompt}
+                                    onChange={(e) => setExecutor({ ...executor, prompt: e.target.value })}
+                                    rows={4}
+                                    className="w-full px-4 py-3 bg-theme-on-surface-2 border border-theme-stroke rounded-xl text-base-2 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors resize-none"
+                                    placeholder="Enter custom instructions for the executor agent..."
+                                />
+                            ) : (
+                                <div className="p-4 bg-theme-on-surface-2 border border-theme-stroke rounded-xl">
+                                    <p className="text-base-2 text-theme-primary whitespace-pre-wrap">
+                                        {executor.prompt || "No custom prompt configured"}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Technical Agent */}
+                        <div className="p-6 bg-theme-on-surface-1 rounded-xl border border-theme-stroke">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                                        <Icon className="w-5 h-5 fill-blue-500" name="star" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-title-2 text-theme-primary font-semibold">
+                                            Technical Agent
+                                        </h4>
+                                        <p className="text-caption-2 text-theme-tertiary">
+                                            Analyzes technical indicators and strategies
+                                        </p>
+                                    </div>
+                                </div>
+                                <Text className="text-title-2 text-theme-primary font-semibold">
+                                    {technical.weightage}%
+                                </Text>
+                            </div>
+
+                            <div className="mb-6">
+                                <Box px={2}>
+                                    <Slider
+                                        value={technical.weightage}
+                                        onChange={(value) => setTechnical({ ...technical, weightage: value })}
+                                        min={0}
+                                        max={100}
+                                        step={1}
+                                        isDisabled={!isEditing}
+                                    >
+                                        <SliderTrack height="6px" borderRadius="3px">
+                                            <SliderFilledTrack bg="blue.500" />
+                                        </SliderTrack>
+                                        <SliderThumb
+                                            width="20px"
+                                            height="20px"
+                                            bg="blue.500"
+                                            boxShadow="0 2px 4px rgba(0,0,0,0.2)"
+                                        />
+                                    </Slider>
+                                </Box>
+                            </div>
+
+                            {/* Pre-built Technical Strategies */}
+                            <div className="mb-6">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="text-base-2 text-theme-primary font-semibold">
+                                        Pre-built Technical Strategies
+                                    </div>
+                                </div>
+                                <p className="text-caption-2 text-theme-secondary mb-4">
+                                    Select one or more technical analysis strategies
+                                </p>
+                                <div className="space-y-3">
+                                    {TECHNICAL_STRATEGIES.map((tech) => {
+                                        const isSelected = selectedTechnicalStrategies.some(
+                                            (t) => t.id === tech.id
+                                        );
+                                        return (
+                                            <div
+                                                key={tech.id}
+                                                className={`p-4 rounded-xl border transition-colors ${
+                                                    isSelected
+                                                        ? "border-blue-500 bg-blue-500/5"
+                                                        : "border-theme-stroke"
+                                                } ${!isEditing ? "opacity-70" : ""}`}
+                                            >
+                                                <label className="flex items-start gap-3 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        onChange={() =>
+                                                            isEditing &&
+                                                            handleToggleTechnicalStrategy(tech)
+                                                        }
+                                                        disabled={!isEditing}
+                                                        className="mt-1 w-5 h-5 accent-blue-500 rounded"
+                                                    />
+                                                    <div className="flex-1">
+                                                        <div className="text-base-2 text-theme-primary mb-1 font-semibold">
+                                                            {tech.name}
+                                                        </div>
+                                                        <div className="text-caption-2 text-theme-secondary">
+                                                            {tech.description}
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Custom Technical Strategies */}
+                            <div className="mb-6">
+                                <div className="text-base-2 text-theme-primary font-semibold mb-3">
+                                    Custom Technical Strategies
+                                </div>
+                                {selectedTechnicalStrategies.filter((t) => t.isCustom).length > 0 ? (
+                                    <div className="space-y-3">
+                                        {selectedTechnicalStrategies
+                                            .filter((t) => t.isCustom)
+                                            .map((tech) => (
+                                                <div
+                                                    key={tech.id}
+                                                    className="p-4 rounded-xl border border-blue-500 bg-blue-500/5"
+                                                >
+                                                    <div className="flex items-start justify-between mb-3">
+                                                        <div className="flex-1">
+                                                            <div className="text-base-2 text-theme-primary mb-1 font-semibold">
+                                                                {tech.name}
+                                                            </div>
+                                                            <div className="text-caption-2 text-theme-secondary">
+                                                                {tech.description}
+                                                            </div>
+                                                        </div>
+                                                        {isEditing && (
+                                                            <div className="flex gap-2">
+                                                                <button
+                                                                    onClick={() =>
+                                                                        openEditStrategyModal(tech.id)
+                                                                    }
+                                                                    className="p-2 hover:bg-theme-on-surface-2 rounded-lg transition-colors"
+                                                                    title="Edit strategy"
+                                                                >
+                                                                    <Icon
+                                                                        className="w-4 h-4 fill-blue-500"
+                                                                        name="edit"
+                                                                    />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() =>
+                                                                        handleRemoveStrategy(tech.id)
+                                                                    }
+                                                                    className="p-2 hover:bg-theme-on-surface-2 rounded-lg transition-colors"
+                                                                    title="Remove strategy"
+                                                                >
+                                                                    <Icon
+                                                                        className="w-4 h-4 fill-red-500"
+                                                                        name="close"
+                                                                    />
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {tech.generatedCode && (
+                                                        <div className="mt-3 space-y-3">
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="text-caption-2 text-theme-tertiary">
+                                                                    Generated Code
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => openEditStrategyModal(tech.id)}
+                                                                    className="text-caption-2 text-blue-500 hover:text-blue-600 flex items-center gap-1"
+                                                                >
+                                                                    <Icon
+                                                                        className="w-3 h-3 fill-blue-500"
+                                                                        name="code"
+                                                                    />
+                                                                    View Code
+                                                                </button>
+                                                            </div>
+                                                            <div className="flex gap-2">
+                                                                {tech.generatedCode.pinescript && (
+                                                                    <span className="px-2 py-1 bg-theme-on-surface-2 rounded text-caption-2 text-theme-primary">
+                                                                        Pine Script
+                                                                    </span>
+                                                                )}
+                                                                {tech.generatedCode.python && (
+                                                                    <span className="px-2 py-1 bg-theme-on-surface-2 rounded text-caption-2 text-theme-primary">
+                                                                        Python
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {tech.backtestResults && (
+                                                        <div className="mt-3">
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <span className="text-caption-2 text-theme-tertiary">
+                                                                    Backtest Results
+                                                                </span>
+                                                                <button
+                                                                    onClick={() =>
+                                                                        openBacktestModal(tech.id)
+                                                                    }
+                                                                    className="text-caption-2 text-blue-500 hover:text-blue-600"
+                                                                >
+                                                                    View Details
+                                                                </button>
+                                                            </div>
+                                                            <div className="grid grid-cols-3 gap-2">
+                                                                <div className="p-2 bg-theme-on-surface-2 rounded-lg">
+                                                                    <div className="text-caption-2 text-theme-tertiary mb-1">
+                                                                        Return
+                                                                    </div>
+                                                                    <div
+                                                                        className={`text-caption-1 font-semibold ${
+                                                                            tech.backtestResults
+                                                                                .totalReturnPercentage > 0
+                                                                                ? "text-green-500"
+                                                                                : "text-red-500"
+                                                                        }`}
+                                                                    >
+                                                                        {tech.backtestResults.totalReturnPercentage.toFixed(
+                                                                            2
+                                                                        )}
+                                                                        %
+                                                                    </div>
+                                                                </div>
+                                                                <div className="p-2 bg-theme-on-surface-2 rounded-lg">
+                                                                    <div className="text-caption-2 text-theme-tertiary mb-1">
+                                                                        Win Rate
+                                                                    </div>
+                                                                    <div className="text-caption-1 font-semibold text-theme-primary">
+                                                                        {tech.backtestResults.winRate.toFixed(
+                                                                            1
+                                                                        )}
+                                                                        %
+                                                                    </div>
+                                                                </div>
+                                                                <div className="p-2 bg-theme-on-surface-2 rounded-lg">
+                                                                    <div className="text-caption-2 text-theme-tertiary mb-1">
+                                                                        Sharpe
+                                                                    </div>
+                                                                    <div className="text-caption-1 font-semibold text-theme-primary">
+                                                                        {tech.backtestResults.sharpeRatio.toFixed(
+                                                                            2
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    <button
+                                                        onClick={() => openBacktestModal(tech.id)}
+                                                        className="mt-3 w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-caption-1"
+                                                    >
+                                                        {tech.backtestResults ? "Re-run Backtest" : "Run Backtest"}
+                                                    </button>
+                                                </div>
+                                            ))}
+                                    </div>
+                                ) : (
+                                    <div className="p-4 bg-theme-on-surface-2 rounded-xl border border-dashed border-theme-stroke text-center">
+                                        <p className="text-caption-2 text-theme-tertiary">
+                                            No custom strategies yet. {isEditing && "Click 'Create New' to add one."}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Custom Prompt */}
+                            <div>
+                                <div className="text-base-2 text-theme-primary font-semibold mb-2">
+                                    Custom Prompt (Optional)
+                                </div>
+                                {isEditing ? (
+                                    <>
+                                        <textarea
+                                            value={technical.prompt}
+                                            onChange={(e) => setTechnical({ ...technical, prompt: e.target.value })}
+                                            rows={4}
+                                            className="w-full px-4 py-3 bg-theme-on-surface-2 border border-theme-stroke rounded-xl text-base-2 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors resize-none"
+                                            placeholder="Enter custom prompt to generate technical strategy code..."
+                                        />
+                                        {technical.prompt.trim() && (
+                                            <button
+                                                onClick={() => {
+                                                    setCustomStrategyDescription(technical.prompt);
+                                                    setCustomStrategyName("Custom Strategy");
+                                                    handleGenerateCode();
+                                                    setShowCustomStrategyModal(true);
+                                                }}
+                                                className="mt-3 w-full px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                <Icon className="w-5 h-5 fill-white" name="code" />
+                                                Generate Code & Backtest
+                                            </button>
+                                        )}
+                                    </>
+                                ) : (
+                                    <div className="p-4 bg-theme-on-surface-2 border border-theme-stroke rounded-xl">
+                                        <p className="text-base-2 text-theme-primary whitespace-pre-wrap">
+                                            {technical.prompt || "No custom prompt configured"}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Sentiment Agent */}
+                        <div className="p-6 bg-theme-on-surface-1 rounded-xl border border-theme-stroke">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                                        <Icon className="w-5 h-5 fill-yellow-500" name="news" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-title-2 text-theme-primary font-semibold">
+                                            Sentiment Agent
+                                        </h4>
+                                        <p className="text-caption-2 text-theme-tertiary">
+                                            Analyzes market sentiment
+                                        </p>
+                                    </div>
+                                </div>
+                                <Text className="text-title-2 text-theme-primary font-semibold">
+                                    {sentiment.weightage}%
+                                </Text>
+                            </div>
+
+                            <div className="mb-4">
+                                <Box px={2}>
+                                    <Slider
+                                        value={sentiment.weightage}
+                                        onChange={(value) => setSentiment({ ...sentiment, weightage: value })}
+                                        min={0}
+                                        max={100}
+                                        step={1}
+                                        isDisabled={!isEditing}
+                                    >
+                                        <SliderTrack height="6px" borderRadius="3px">
+                                            <SliderFilledTrack bg="yellow.500" />
+                                        </SliderTrack>
+                                        <SliderThumb
+                                            width="20px"
+                                            height="20px"
+                                            bg="yellow.500"
+                                            boxShadow="0 2px 4px rgba(0,0,0,0.2)"
+                                        />
+                                    </Slider>
+                                </Box>
+                            </div>
+
+                            {isEditing ? (
+                                <textarea
+                                    value={sentiment.prompt}
+                                    onChange={(e) => setSentiment({ ...sentiment, prompt: e.target.value })}
+                                    rows={4}
+                                    className="w-full px-4 py-3 bg-theme-on-surface-2 border border-theme-stroke rounded-xl text-base-2 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors resize-none"
+                                    placeholder="Enter custom instructions for sentiment analysis..."
+                                />
+                            ) : (
+                                <div className="p-4 bg-theme-on-surface-2 border border-theme-stroke rounded-xl">
+                                    <p className="text-base-2 text-theme-primary whitespace-pre-wrap">
+                                        {sentiment.prompt || "No custom prompt configured"}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Web Search Agent */}
+                        <div className="p-6 bg-theme-on-surface-1 rounded-xl border border-theme-stroke">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+                                        <Icon className="w-5 h-5 fill-purple-500" name="search" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-title-2 text-theme-primary font-semibold">
+                                            Web Search Agent
+                                        </h4>
+                                        <p className="text-caption-2 text-theme-tertiary">
+                                            Searches web for market insights
+                                        </p>
+                                    </div>
+                                </div>
+                                <Text className="text-title-2 text-theme-primary font-semibold">
+                                    {webSearch.weightage}%
+                                </Text>
+                            </div>
+
+                            <div className="mb-4">
+                                <Box px={2}>
+                                    <Slider
+                                        value={webSearch.weightage}
+                                        onChange={(value) => setWebSearch({ ...webSearch, weightage: value })}
+                                        min={0}
+                                        max={100}
+                                        step={1}
+                                        isDisabled={!isEditing}
+                                    >
+                                        <SliderTrack height="6px" borderRadius="3px">
+                                            <SliderFilledTrack bg="purple.500" />
+                                        </SliderTrack>
+                                        <SliderThumb
+                                            width="20px"
+                                            height="20px"
+                                            bg="purple.500"
+                                            boxShadow="0 2px 4px rgba(0,0,0,0.2)"
+                                        />
+                                    </Slider>
+                                </Box>
+                            </div>
+
+                            {isEditing ? (
+                                <textarea
+                                    value={webSearch.prompt}
+                                    onChange={(e) => setWebSearch({ ...webSearch, prompt: e.target.value })}
+                                    rows={4}
+                                    className="w-full px-4 py-3 bg-theme-on-surface-2 border border-theme-stroke rounded-xl text-base-2 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors resize-none"
+                                    placeholder="Enter custom instructions for web search..."
+                                />
+                            ) : (
+                                <div className="p-4 bg-theme-on-surface-2 border border-theme-stroke rounded-xl">
+                                    <p className="text-base-2 text-theme-primary whitespace-pre-wrap">
+                                        {webSearch.prompt || "No custom prompt configured"}
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </Card>
@@ -551,335 +1053,6 @@ class ${customStrategyName.replace(/\s+/g, "")}(Strategy):
                                 </button>
                             ))}
                         </div>
-                    </div>
-                </Card>
-
-                {/* Technical Strategies */}
-                <Card>
-                    <div className="flex items-center justify-between mb-4">
-                        <div>
-                            <h3 className="text-h6 text-theme-primary mb-1">
-                                Technical Strategies
-                            </h3>
-                            <p className="text-caption-1 text-theme-secondary">
-                                Select predefined strategies or create custom ones
-                            </p>
-                        </div>
-                        {isEditing && (
-                            <button
-                                onClick={() => setShowCustomStrategyModal(true)}
-                                className="px-4 py-2 bg-primary-1 hover:bg-primary-2 text-white rounded-lg transition-colors text-caption-1 flex items-center gap-2"
-                            >
-                                <Icon className="w-4 h-4 fill-white" name="plus" />
-                                Create Custom
-                            </button>
-                        )}
-                    </div>
-
-                    <div className="space-y-4">
-                        {/* Predefined Strategies */}
-                        <div>
-                            <h4 className="text-base-2s text-theme-primary mb-3">
-                                Predefined Strategies
-                            </h4>
-                            <div className="space-y-3">
-                                {TECHNICAL_STRATEGIES.map((tech) => {
-                                    const isSelected = selectedTechnicalStrategies.some(
-                                        (t) => t.id === tech.id
-                                    );
-                                    const selectedStrategy = selectedTechnicalStrategies.find(
-                                        (t) => t.id === tech.id
-                                    );
-                                    return (
-                                        <div
-                                            key={tech.id}
-                                            className={`p-4 rounded-xl border transition-colors ${
-                                                isSelected
-                                                    ? "border-primary-1 bg-primary-1/5"
-                                                    : "border-theme-stroke"
-                                            } ${!isEditing ? "opacity-70" : ""}`}
-                                        >
-                                            <label className="flex items-start gap-3 cursor-pointer mb-3">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isSelected}
-                                                    onChange={() =>
-                                                        isEditing &&
-                                                        handleToggleTechnicalStrategy(tech)
-                                                    }
-                                                    disabled={!isEditing}
-                                                    className="mt-1 w-5 h-5 accent-primary-1 rounded"
-                                                />
-                                                <div className="flex-1">
-                                                    <div className="text-base-2s text-theme-primary mb-1">
-                                                        {tech.name}
-                                                    </div>
-                                                    <div className="text-caption-2 text-theme-secondary">
-                                                        {tech.description}
-                                                    </div>
-                                                </div>
-                                            </label>
-
-                                            {isSelected && selectedStrategy && (
-                                                <div className="ml-8 space-y-3 border-t border-theme-stroke pt-3">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="text-caption-2 text-theme-tertiary">
-                                                            Generated Code
-                                                        </div>
-                                                        <button
-                                                            onClick={() =>
-                                                                openEditStrategyModal(tech.id)
-                                                            }
-                                                            className="text-caption-2 text-primary-1 hover:text-primary-2 flex items-center gap-1"
-                                                        >
-                                                            <Icon
-                                                                className="w-3 h-3 fill-primary-1"
-                                                                name="edit"
-                                                            />
-                                                            View/Edit Code
-                                                        </button>
-                                                    </div>
-                                                    <div className="flex gap-2">
-                                                        {selectedStrategy.generatedCode?.pinescript && (
-                                                            <span className="px-2 py-1 bg-theme-on-surface-1 rounded text-caption-2 text-theme-primary">
-                                                                Pine Script
-                                                            </span>
-                                                        )}
-                                                        {selectedStrategy.generatedCode?.python && (
-                                                            <span className="px-2 py-1 bg-theme-on-surface-1 rounded text-caption-2 text-theme-primary">
-                                                                Python
-                                                            </span>
-                                                        )}
-                                                    </div>
-
-                                                    {selectedStrategy.backtestResults && (
-                                                        <div className="mb-3">
-                                                            <div className="flex items-center justify-between mb-2">
-                                                                <span className="text-caption-2 text-theme-tertiary">
-                                                                    Latest Backtest Results
-                                                                </span>
-                                                                <button
-                                                                    onClick={() =>
-                                                                        openBacktestModal(tech.id)
-                                                                    }
-                                                                    className="text-caption-2 text-primary-1 hover:text-primary-2"
-                                                                >
-                                                                    View Details
-                                                                </button>
-                                                            </div>
-                                                            <div className="grid grid-cols-3 gap-2">
-                                                                <div className="p-2 bg-theme-on-surface-1 rounded-lg">
-                                                                    <div className="text-caption-2 text-theme-tertiary mb-1">
-                                                                        Return
-                                                                    </div>
-                                                                    <div
-                                                                        className={`text-caption-1 font-semibold ${
-                                                                            selectedStrategy
-                                                                                .backtestResults
-                                                                                .totalReturnPercentage >
-                                                                            0
-                                                                                ? "text-primary-2"
-                                                                                : "text-theme-red"
-                                                                        }`}
-                                                                    >
-                                                                        {selectedStrategy.backtestResults.totalReturnPercentage.toFixed(
-                                                                            2
-                                                                        )}
-                                                                        %
-                                                                    </div>
-                                                                </div>
-                                                                <div className="p-2 bg-theme-on-surface-1 rounded-lg">
-                                                                    <div className="text-caption-2 text-theme-tertiary mb-1">
-                                                                        Win Rate
-                                                                    </div>
-                                                                    <div className="text-caption-1 font-semibold text-theme-primary">
-                                                                        {selectedStrategy.backtestResults.winRate.toFixed(
-                                                                            1
-                                                                        )}
-                                                                        %
-                                                                    </div>
-                                                                </div>
-                                                                <div className="p-2 bg-theme-on-surface-1 rounded-lg">
-                                                                    <div className="text-caption-2 text-theme-tertiary mb-1">
-                                                                        Sharpe
-                                                                    </div>
-                                                                    <div className="text-caption-1 font-semibold text-theme-primary">
-                                                                        {selectedStrategy.backtestResults.sharpeRatio.toFixed(
-                                                                            2
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                    <button
-                                                        onClick={() => openBacktestModal(tech.id)}
-                                                        className="w-full px-4 py-2 bg-primary-1 hover:bg-primary-2 text-white rounded-lg transition-colors text-caption-1"
-                                                    >
-                                                        {selectedStrategy.backtestResults ? "Run New Backtest" : "Run Backtest"}
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Custom Strategies */}
-                        {selectedTechnicalStrategies.filter((t) => t.isCustom).length > 0 && (
-                            <div>
-                                <h4 className="text-base-2s text-theme-primary mb-3">
-                                    Custom Strategies
-                                </h4>
-                                <div className="space-y-3">
-                                    {selectedTechnicalStrategies
-                                        .filter((t) => t.isCustom)
-                                        .map((tech) => (
-                                            <div
-                                                key={tech.id}
-                                                className="p-4 rounded-xl border border-primary-1 bg-primary-1/5"
-                                            >
-                                                <div className="flex items-start justify-between mb-3">
-                                                    <div className="flex-1">
-                                                        <div className="text-base-2s text-theme-primary mb-1">
-                                                            {tech.name}
-                                                        </div>
-                                                        <div className="text-caption-2 text-theme-secondary">
-                                                            {tech.description}
-                                                        </div>
-                                                    </div>
-                                                    {isEditing && (
-                                                        <div className="flex gap-2">
-                                                            <button
-                                                                onClick={() =>
-                                                                    openEditStrategyModal(tech.id)
-                                                                }
-                                                                className="p-2 hover:bg-theme-on-surface-2 rounded-lg transition-colors"
-                                                                title="Edit strategy"
-                                                            >
-                                                                <Icon
-                                                                    className="w-4 h-4 fill-primary-1"
-                                                                    name="edit"
-                                                                />
-                                                            </button>
-                                                            <button
-                                                                onClick={() =>
-                                                                    handleRemoveStrategy(tech.id)
-                                                                }
-                                                                className="p-2 hover:bg-theme-on-surface-2 rounded-lg transition-colors"
-                                                                title="Remove strategy"
-                                                            >
-                                                                <Icon
-                                                                    className="w-4 h-4 fill-theme-red"
-                                                                    name="close"
-                                                                />
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {tech.generatedCode && (
-                                                    <div className="mb-3">
-                                                        <div className="flex items-center justify-between mb-2">
-                                                            <div className="text-caption-2 text-theme-tertiary">
-                                                                Generated Code
-                                                            </div>
-                                                            <button
-                                                                onClick={() => openEditStrategyModal(tech.id)}
-                                                                className="text-caption-2 text-primary-1 hover:text-primary-2 flex items-center gap-1"
-                                                            >
-                                                                <Icon
-                                                                    className="w-3 h-3 fill-primary-1"
-                                                                    name="edit"
-                                                                />
-                                                                View/Edit Code
-                                                            </button>
-                                                        </div>
-                                                        <div className="flex gap-2">
-                                                            {tech.generatedCode.pinescript && (
-                                                                <span className="px-2 py-1 bg-theme-on-surface-1 rounded text-caption-2 text-theme-primary">
-                                                                    Pine Script
-                                                                </span>
-                                                            )}
-                                                            {tech.generatedCode.python && (
-                                                                <span className="px-2 py-1 bg-theme-on-surface-1 rounded text-caption-2 text-theme-primary">
-                                                                    Python
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {tech.backtestResults && (
-                                                    <div className="space-y-3 mb-3">
-                                                        <div className="flex items-center justify-between">
-                                                            <span className="text-caption-2 text-theme-tertiary">
-                                                                Latest Backtest Results
-                                                            </span>
-                                                            <button
-                                                                onClick={() =>
-                                                                    openBacktestModal(tech.id)
-                                                                }
-                                                                className="text-caption-2 text-primary-1 hover:text-primary-2"
-                                                            >
-                                                                View Details
-                                                            </button>
-                                                        </div>
-                                                        <div className="grid grid-cols-3 gap-3">
-                                                            <div className="p-3 bg-theme-on-surface-1 rounded-lg">
-                                                                <div className="text-caption-2 text-theme-tertiary mb-1">
-                                                                    Return
-                                                                </div>
-                                                                <div
-                                                                    className={`text-base-2s ${
-                                                                        tech.backtestResults
-                                                                            .totalReturnPercentage > 0
-                                                                            ? "text-primary-2"
-                                                                            : "text-theme-red"
-                                                                    }`}
-                                                                >
-                                                                    {tech.backtestResults.totalReturnPercentage.toFixed(
-                                                                        2
-                                                                    )}
-                                                                    %
-                                                                </div>
-                                                            </div>
-                                                            <div className="p-3 bg-theme-on-surface-1 rounded-lg">
-                                                                <div className="text-caption-2 text-theme-tertiary mb-1">
-                                                                    Win Rate
-                                                                </div>
-                                                                <div className="text-base-2s text-theme-primary">
-                                                                    {tech.backtestResults.winRate.toFixed(
-                                                                        1
-                                                                    )}
-                                                                    %
-                                                                </div>
-                                                            </div>
-                                                            <div className="p-3 bg-theme-on-surface-1 rounded-lg">
-                                                                <div className="text-caption-2 text-theme-tertiary mb-1">
-                                                                    Sharpe
-                                                                </div>
-                                                                <div className="text-base-2s text-theme-primary">
-                                                                    {tech.backtestResults.sharpeRatio.toFixed(
-                                                                        2
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                <button
-                                                    onClick={() => openBacktestModal(tech.id)}
-                                                    className="w-full px-4 py-2 bg-primary-1 hover:bg-primary-2 text-white rounded-lg transition-colors text-caption-1"
-                                                >
-                                                    {tech.backtestResults ? "Run New Backtest" : "Run Backtest"}
-                                                </button>
-                                            </div>
-                                        ))}
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </Card>
 
@@ -948,595 +1121,6 @@ class ${customStrategyName.replace(/\s+/g, "")}(Strategy):
                         </div>
                     </div>
                 </Card>
-
-                {/* Custom Strategy Modal */}
-                {showCustomStrategyModal && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                        <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-h5 text-theme-primary">
-                                        Create Custom Strategy
-                                    </h2>
-                                    <button
-                                        onClick={() => setShowCustomStrategyModal(false)}
-                                        className="p-2 hover:bg-theme-on-surface-2 rounded-lg transition-colors"
-                                    >
-                                        <Icon
-                                            className="w-5 h-5 fill-theme-secondary"
-                                            name="close"
-                                        />
-                                    </button>
-                                </div>
-
-                                <div>
-                                    <label className="text-base-2 text-theme-secondary mb-2 block">
-                                        Strategy Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={customStrategyName}
-                                        onChange={(e) => setCustomStrategyName(e.target.value)}
-                                        placeholder="e.g., My Custom EMA Strategy"
-                                        className="w-full px-4 py-3 bg-theme-on-surface-1 border border-theme-stroke rounded-xl text-base-2 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="text-base-2 text-theme-secondary mb-2 block">
-                                        Strategy Description
-                                    </label>
-                                    <textarea
-                                        value={customStrategyDescription}
-                                        onChange={(e) =>
-                                            setCustomStrategyDescription(e.target.value)
-                                        }
-                                        rows={4}
-                                        placeholder="Describe your strategy in detail. Example: Use 12 and 26 period EMAs for crossover signals. Buy when fast crosses above slow, sell when opposite..."
-                                        className="w-full px-4 py-3 bg-theme-on-surface-1 border border-theme-stroke rounded-xl text-base-2 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors resize-none"
-                                    />
-                                </div>
-
-                                {customStrategyDescription && (
-                                    <button
-                                        onClick={handleGenerateCode}
-                                        disabled={isGeneratingCode}
-                                        className="w-full px-6 py-3 bg-primary-1 hover:bg-primary-2 text-white rounded-xl transition-colors disabled:opacity-50"
-                                    >
-                                        {isGeneratingCode
-                                            ? "Generating Code..."
-                                            : "Generate Code with AI"}
-                                    </button>
-                                )}
-
-                                {(generatedPineScript || generatedPython) && (
-                                    <div className="space-y-3">
-                                        <div className="flex gap-2 border-b border-theme-stroke">
-                                            <button
-                                                onClick={() =>
-                                                    setSelectedCodeLanguage("pinescript")
-                                                }
-                                                className={`px-4 py-2 text-base-2 transition-colors ${
-                                                    selectedCodeLanguage === "pinescript"
-                                                        ? "text-primary-1 border-b-2 border-primary-1"
-                                                        : "text-theme-secondary hover:text-theme-primary"
-                                                }`}
-                                            >
-                                                Pine Script
-                                            </button>
-                                            <button
-                                                onClick={() => setSelectedCodeLanguage("python")}
-                                                className={`px-4 py-2 text-base-2 transition-colors ${
-                                                    selectedCodeLanguage === "python"
-                                                        ? "text-primary-1 border-b-2 border-primary-1"
-                                                        : "text-theme-secondary hover:text-theme-primary"
-                                                }`}
-                                            >
-                                                Python
-                                            </button>
-                                        </div>
-
-                                        <div className="relative">
-                                            <div className="absolute top-2 right-2 flex gap-2 z-10">
-                                                <button
-                                                    onClick={() => setIsEditingCode(!isEditingCode)}
-                                                    className="p-2 bg-theme-on-surface-2 hover:bg-theme-stroke rounded-lg transition-colors"
-                                                    title={isEditingCode ? "View code" : "Edit code"}
-                                                >
-                                                    <Icon
-                                                        className="w-4 h-4 fill-theme-secondary"
-                                                        name={isEditingCode ? "eye" : "edit"}
-                                                    />
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        navigator.clipboard.writeText(
-                                                            selectedCodeLanguage === "pinescript"
-                                                                ? generatedPineScript
-                                                                : generatedPython
-                                                        );
-                                                    }}
-                                                    className="p-2 bg-theme-on-surface-2 hover:bg-theme-stroke rounded-lg transition-colors"
-                                                    title="Copy code"
-                                                >
-                                                    <Icon
-                                                        className="w-4 h-4 fill-theme-secondary"
-                                                        name="copy"
-                                                    />
-                                                </button>
-                                            </div>
-                                            {isEditingCode ? (
-                                                <textarea
-                                                    value={
-                                                        selectedCodeLanguage === "pinescript"
-                                                            ? generatedPineScript
-                                                            : generatedPython
-                                                    }
-                                                    onChange={(e) => {
-                                                        if (selectedCodeLanguage === "pinescript") {
-                                                            setGeneratedPineScript(e.target.value);
-                                                        } else {
-                                                            setGeneratedPython(e.target.value);
-                                                        }
-                                                    }}
-                                                    rows={20}
-                                                    className="w-full p-4 bg-theme-on-surface-1 border border-theme-stroke rounded-xl text-caption-1 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors font-mono resize-none"
-                                                    spellCheck={false}
-                                                />
-                                            ) : (
-                                                <pre className="p-4 bg-theme-on-surface-1 border border-theme-stroke rounded-xl text-caption-1 text-theme-primary overflow-x-auto max-h-96 overflow-y-auto">
-                                                    <code>
-                                                        {selectedCodeLanguage === "pinescript"
-                                                            ? generatedPineScript
-                                                            : generatedPython}
-                                                    </code>
-                                                </pre>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => setShowCustomStrategyModal(false)}
-                                        className="flex-1 px-6 py-3 border border-theme-stroke hover:bg-theme-on-surface-2 text-theme-primary rounded-xl transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={handleAddCustomStrategy}
-                                        disabled={
-                                            !customStrategyName ||
-                                            !customStrategyDescription ||
-                                            (!generatedPineScript && !generatedPython)
-                                        }
-                                        className="flex-1 px-6 py-3 bg-primary-1 hover:bg-primary-2 text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        Add Strategy
-                                    </button>
-                                </div>
-                            </div>
-                        </Card>
-                    </div>
-                )}
-
-                {/* Backtest Modal */}
-                {showBacktestModal && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                        <Card className="w-full max-w-5xl max-h-[90vh] overflow-y-auto">
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-h5 text-theme-primary">
-                                        Backtest Configuration
-                                    </h2>
-                                    <button
-                                        onClick={() => setShowBacktestModal(false)}
-                                        className="p-2 hover:bg-theme-on-surface-2 rounded-lg transition-colors"
-                                    >
-                                        <Icon
-                                            className="w-5 h-5 fill-theme-secondary"
-                                            name="close"
-                                        />
-                                    </button>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-base-2 text-theme-secondary mb-2 block">
-                                            Token Pair
-                                        </label>
-                                        <select
-                                            value={backtestTokenPair}
-                                            onChange={(e) => setBacktestTokenPair(e.target.value)}
-                                            className="w-full px-4 py-3 bg-theme-on-surface-1 border border-theme-stroke rounded-xl text-base-2 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors"
-                                        >
-                                            {POPULAR_PAIRS.map((pair) => (
-                                                <option key={pair} value={pair}>
-                                                    {pair}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label className="text-base-2 text-theme-secondary mb-2 block">
-                                            Timeframe
-                                        </label>
-                                        <select
-                                            value={backtestTimeframe}
-                                            onChange={(e) => setBacktestTimeframe(e.target.value)}
-                                            className="w-full px-4 py-3 bg-theme-on-surface-1 border border-theme-stroke rounded-xl text-base-2 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors"
-                                        >
-                                            {TIMEFRAMES.map((tf) => (
-                                                <option key={tf} value={tf}>
-                                                    {tf}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label className="text-base-2 text-theme-secondary mb-2 block">
-                                            Start Date
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={backtestStartDate}
-                                            onChange={(e) => setBacktestStartDate(e.target.value)}
-                                            className="w-full px-4 py-3 bg-theme-on-surface-1 border border-theme-stroke rounded-xl text-base-2 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="text-base-2 text-theme-secondary mb-2 block">
-                                            End Date
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={backtestEndDate}
-                                            onChange={(e) => setBacktestEndDate(e.target.value)}
-                                            className="w-full px-4 py-3 bg-theme-on-surface-1 border border-theme-stroke rounded-xl text-base-2 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors"
-                                        />
-                                    </div>
-                                </div>
-
-                                {!backtestResults && (
-                                    <button
-                                        onClick={handleRunBacktest}
-                                        disabled={isBacktesting}
-                                        className="w-full px-6 py-3 bg-primary-1 hover:bg-primary-2 text-white rounded-xl transition-colors disabled:opacity-50"
-                                    >
-                                        {isBacktesting ? "Running Backtest..." : "Run Backtest"}
-                                    </button>
-                                )}
-
-                                {backtestResults && (
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="text-h6 text-theme-primary">
-                                                Backtest Results
-                                            </h3>
-                                            <button
-                                                onClick={handleRunBacktest}
-                                                disabled={isBacktesting}
-                                                className="px-4 py-2 border border-theme-stroke hover:bg-theme-on-surface-2 text-theme-primary rounded-lg transition-colors text-caption-1"
-                                            >
-                                                Re-run
-                                            </button>
-                                        </div>
-
-                                        <div className="grid grid-cols-4 gap-4">
-                                            <div className="p-4 bg-theme-on-surface-1 rounded-xl">
-                                                <div className="text-caption-2 text-theme-tertiary mb-1">
-                                                    Total Return
-                                                </div>
-                                                <div
-                                                    className={`text-h6 ${
-                                                        backtestResults.totalReturnPercentage > 0
-                                                            ? "text-primary-2"
-                                                            : "text-theme-red"
-                                                    }`}
-                                                >
-                                                    {backtestResults.totalReturnPercentage.toFixed(
-                                                        2
-                                                    )}
-                                                    %
-                                                </div>
-                                                <div className="text-caption-2 text-theme-secondary">
-                                                    ${backtestResults.totalReturn.toLocaleString()}
-                                                </div>
-                                            </div>
-
-                                            <div className="p-4 bg-theme-on-surface-1 rounded-xl">
-                                                <div className="text-caption-2 text-theme-tertiary mb-1">
-                                                    Win Rate
-                                                </div>
-                                                <div className="text-h6 text-theme-primary">
-                                                    {backtestResults.winRate.toFixed(1)}%
-                                                </div>
-                                                <div className="text-caption-2 text-theme-secondary">
-                                                    {backtestResults.totalTrades} trades
-                                                </div>
-                                            </div>
-
-                                            <div className="p-4 bg-theme-on-surface-1 rounded-xl">
-                                                <div className="text-caption-2 text-theme-tertiary mb-1">
-                                                    Sharpe Ratio
-                                                </div>
-                                                <div className="text-h6 text-theme-primary">
-                                                    {backtestResults.sharpeRatio.toFixed(2)}
-                                                </div>
-                                            </div>
-
-                                            <div className="p-4 bg-theme-on-surface-1 rounded-xl">
-                                                <div className="text-caption-2 text-theme-tertiary mb-1">
-                                                    Max Drawdown
-                                                </div>
-                                                <div className="text-h6 text-theme-red">
-                                                    {backtestResults.maxDrawdown.toFixed(2)}%
-                                                </div>
-                                            </div>
-
-                                            <div className="p-4 bg-theme-on-surface-1 rounded-xl">
-                                                <div className="text-caption-2 text-theme-tertiary mb-1">
-                                                    Avg Win
-                                                </div>
-                                                <div className="text-base-2 text-primary-2">
-                                                    ${backtestResults.avgWin.toFixed(2)}
-                                                </div>
-                                            </div>
-
-                                            <div className="p-4 bg-theme-on-surface-1 rounded-xl">
-                                                <div className="text-caption-2 text-theme-tertiary mb-1">
-                                                    Avg Loss
-                                                </div>
-                                                <div className="text-base-2 text-theme-red">
-                                                    ${backtestResults.avgLoss.toFixed(2)}
-                                                </div>
-                                            </div>
-
-                                            <div className="p-4 bg-theme-on-surface-1 rounded-xl">
-                                                <div className="text-caption-2 text-theme-tertiary mb-1">
-                                                    Profit Factor
-                                                </div>
-                                                <div className="text-base-2 text-theme-primary">
-                                                    {backtestResults.profitFactor.toFixed(2)}
-                                                </div>
-                                            </div>
-
-                                            <div className="p-4 bg-theme-on-surface-1 rounded-xl">
-                                                <div className="text-caption-2 text-theme-tertiary mb-1">
-                                                    Total Trades
-                                                </div>
-                                                <div className="text-base-2 text-theme-primary">
-                                                    {backtestResults.totalTrades}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="p-4 bg-theme-on-surface-1 rounded-xl">
-                                            <div className="text-caption-2 text-theme-tertiary mb-3">
-                                                Equity Curve
-                                            </div>
-                                            <div className="h-48 flex items-end gap-1">
-                                                {backtestResults.equityCurve.map((point, idx) => {
-                                                    const minValue = Math.min(
-                                                        ...backtestResults.equityCurve.map(
-                                                            (p) => p.value
-                                                        )
-                                                    );
-                                                    const maxValue = Math.max(
-                                                        ...backtestResults.equityCurve.map(
-                                                            (p) => p.value
-                                                        )
-                                                    );
-                                                    const height =
-                                                        ((point.value - minValue) /
-                                                            (maxValue - minValue)) *
-                                                        100;
-                                                    return (
-                                                        <div
-                                                            key={idx}
-                                                            className="flex-1 bg-primary-1 rounded-t"
-                                                            style={{ height: `${height}%` }}
-                                                        />
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <button
-                                    onClick={() => setShowBacktestModal(false)}
-                                    className="w-full px-6 py-3 border border-theme-stroke hover:bg-theme-on-surface-2 text-theme-primary rounded-xl transition-colors"
-                                >
-                                    Close
-                                </button>
-                            </div>
-                        </Card>
-                    </div>
-                )}
-
-                {/* Edit Strategy Modal */}
-                {showEditStrategyModal && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                        <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-h5 text-theme-primary">
-                                        Edit Custom Strategy
-                                    </h2>
-                                    <button
-                                        onClick={() => {
-                                            setShowEditStrategyModal(false);
-                                            setEditingStrategyId(null);
-                                            setCustomStrategyName("");
-                                            setCustomStrategyDescription("");
-                                            setGeneratedPineScript("");
-                                            setGeneratedPython("");
-                                            setIsEditingCode(false);
-                                        }}
-                                        className="p-2 hover:bg-theme-on-surface-2 rounded-lg transition-colors"
-                                    >
-                                        <Icon
-                                            className="w-5 h-5 fill-theme-secondary"
-                                            name="close"
-                                        />
-                                    </button>
-                                </div>
-
-                                <div>
-                                    <label className="text-base-2 text-theme-secondary mb-2 block">
-                                        Strategy Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={customStrategyName}
-                                        onChange={(e) => setCustomStrategyName(e.target.value)}
-                                        placeholder="e.g., My Custom EMA Strategy"
-                                        className="w-full px-4 py-3 bg-theme-on-surface-1 border border-theme-stroke rounded-xl text-base-2 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="text-base-2 text-theme-secondary mb-2 block">
-                                        Strategy Description
-                                    </label>
-                                    <textarea
-                                        value={customStrategyDescription}
-                                        onChange={(e) =>
-                                            setCustomStrategyDescription(e.target.value)
-                                        }
-                                        rows={4}
-                                        placeholder="Describe your strategy in detail..."
-                                        className="w-full px-4 py-3 bg-theme-on-surface-1 border border-theme-stroke rounded-xl text-base-2 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors resize-none"
-                                    />
-                                </div>
-
-                                {(generatedPineScript || generatedPython) && (
-                                    <div className="space-y-3">
-                                        <div className="flex items-center justify-between border-b border-theme-stroke pb-2">
-                                            <div className="flex gap-2">
-                                                <button
-                                                    onClick={() =>
-                                                        setSelectedCodeLanguage("pinescript")
-                                                    }
-                                                    className={`px-4 py-2 text-base-2 transition-colors ${
-                                                        selectedCodeLanguage === "pinescript"
-                                                            ? "text-primary-1 border-b-2 border-primary-1"
-                                                            : "text-theme-secondary hover:text-theme-primary"
-                                                    }`}
-                                                >
-                                                    Pine Script
-                                                </button>
-                                                <button
-                                                    onClick={() => setSelectedCodeLanguage("python")}
-                                                    className={`px-4 py-2 text-base-2 transition-colors ${
-                                                        selectedCodeLanguage === "python"
-                                                            ? "text-primary-1 border-b-2 border-primary-1"
-                                                            : "text-theme-secondary hover:text-theme-primary"
-                                                    }`}
-                                                >
-                                                    Python
-                                                </button>
-                                            </div>
-                                            <span className="text-caption-2 text-theme-tertiary">
-                                                {isEditingCode ? "Editing mode" : "View mode"}
-                                            </span>
-                                        </div>
-
-                                        <div className="relative">
-                                            <div className="absolute top-2 right-2 flex gap-2 z-10">
-                                                <button
-                                                    onClick={() => setIsEditingCode(!isEditingCode)}
-                                                    className="p-2 bg-theme-on-surface-2 hover:bg-theme-stroke rounded-lg transition-colors"
-                                                    title={isEditingCode ? "View code" : "Edit code"}
-                                                >
-                                                    <Icon
-                                                        className="w-4 h-4 fill-theme-secondary"
-                                                        name={isEditingCode ? "eye" : "edit"}
-                                                    />
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        navigator.clipboard.writeText(
-                                                            selectedCodeLanguage === "pinescript"
-                                                                ? generatedPineScript
-                                                                : generatedPython
-                                                        );
-                                                    }}
-                                                    className="p-2 bg-theme-on-surface-2 hover:bg-theme-stroke rounded-lg transition-colors"
-                                                    title="Copy code"
-                                                >
-                                                    <Icon
-                                                        className="w-4 h-4 fill-theme-secondary"
-                                                        name="copy"
-                                                    />
-                                                </button>
-                                            </div>
-                                            {isEditingCode ? (
-                                                <textarea
-                                                    value={
-                                                        selectedCodeLanguage === "pinescript"
-                                                            ? generatedPineScript
-                                                            : generatedPython
-                                                    }
-                                                    onChange={(e) => {
-                                                        if (selectedCodeLanguage === "pinescript") {
-                                                            setGeneratedPineScript(e.target.value);
-                                                        } else {
-                                                            setGeneratedPython(e.target.value);
-                                                        }
-                                                    }}
-                                                    rows={20}
-                                                    className="w-full p-4 bg-theme-on-surface-1 border border-theme-stroke rounded-xl text-caption-1 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors font-mono resize-none"
-                                                    spellCheck={false}
-                                                />
-                                            ) : (
-                                                <pre className="p-4 bg-theme-on-surface-1 border border-theme-stroke rounded-xl text-caption-1 text-theme-primary overflow-x-auto max-h-96 overflow-y-auto">
-                                                    <code>
-                                                        {selectedCodeLanguage === "pinescript"
-                                                            ? generatedPineScript
-                                                            : generatedPython}
-                                                    </code>
-                                                </pre>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => {
-                                            setShowEditStrategyModal(false);
-                                            setEditingStrategyId(null);
-                                            setCustomStrategyName("");
-                                            setCustomStrategyDescription("");
-                                            setGeneratedPineScript("");
-                                            setGeneratedPython("");
-                                            setIsEditingCode(false);
-                                        }}
-                                        className="flex-1 px-6 py-3 border border-theme-stroke hover:bg-theme-on-surface-2 text-theme-primary rounded-xl transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={handleUpdateStrategy}
-                                        disabled={
-                                            !customStrategyName ||
-                                            !customStrategyDescription ||
-                                            (!generatedPineScript && !generatedPython)
-                                        }
-                                        className="flex-1 px-6 py-3 bg-primary-1 hover:bg-primary-2 text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        Update Strategy
-                                    </button>
-                                </div>
-                            </div>
-                        </Card>
-                    </div>
-                )}
 
                 {/* Deposit Modal */}
                 {showDepositModal && (
@@ -1617,6 +1201,434 @@ class ${customStrategyName.replace(/\s+/g, "")}(Strategy):
                                 </div>
                             </div>
                         </Card>
+                    </div>
+                )}
+
+                {/* Create Custom Strategy Modal */}
+                {showCustomStrategyModal && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-theme-on-surface-1 rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-h5 text-theme-primary">
+                                    Create Custom Strategy
+                                </h3>
+                                <button
+                                    onClick={() => setShowCustomStrategyModal(false)}
+                                    className="text-theme-tertiary hover:text-theme-primary"
+                                >
+                                    <Icon className="w-6 h-6 fill-current" name="close" />
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="text-base-2 text-theme-primary mb-2 block">
+                                        Strategy Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={customStrategyName}
+                                        onChange={(e) => setCustomStrategyName(e.target.value)}
+                                        placeholder="e.g., My EMA Crossover"
+                                        className="w-full px-4 py-3 bg-theme-on-surface-2 border border-theme-stroke rounded-xl text-base-2 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-base-2 text-theme-primary mb-2 block">
+                                        Strategy Description
+                                    </label>
+                                    <textarea
+                                        value={customStrategyDescription}
+                                        onChange={(e) => setCustomStrategyDescription(e.target.value)}
+                                        placeholder="Describe your trading strategy..."
+                                        rows={4}
+                                        className="w-full px-4 py-3 bg-theme-on-surface-2 border border-theme-stroke rounded-xl text-base-2 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors resize-none"
+                                    />
+                                </div>
+
+                                <button
+                                    onClick={handleGenerateCode}
+                                    disabled={isGeneratingCode || !customStrategyName || !customStrategyDescription}
+                                    className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    {isGeneratingCode ? (
+                                        <>
+                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            Generating Code...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Icon className="w-5 h-5 fill-white" name="code" />
+                                            Generate Code
+                                        </>
+                                    )}
+                                </button>
+
+                                {(generatedPineScript || generatedPython) && (
+                                    <div className="space-y-4 border-t border-theme-stroke pt-4">
+                                        <h4 className="text-title-2 text-theme-primary font-semibold">
+                                            Generated Code
+                                        </h4>
+
+                                        {generatedPython && (
+                                            <div>
+                                                <label className="text-caption-1 text-theme-secondary mb-2 block">
+                                                    Python Code
+                                                </label>
+                                                <textarea
+                                                    value={generatedPython}
+                                                    onChange={(e) => setGeneratedPython(e.target.value)}
+                                                    rows={10}
+                                                    className="w-full px-4 py-3 bg-theme-on-surface-2 border border-theme-stroke rounded-xl text-caption-1 font-mono text-theme-primary focus:outline-none focus:border-primary-1 transition-colors resize-none"
+                                                />
+                                            </div>
+                                        )}
+
+                                        {generatedPineScript && (
+                                            <div>
+                                                <label className="text-caption-1 text-theme-secondary mb-2 block">
+                                                    PineScript Code
+                                                </label>
+                                                <textarea
+                                                    value={generatedPineScript}
+                                                    onChange={(e) => setGeneratedPineScript(e.target.value)}
+                                                    rows={10}
+                                                    className="w-full px-4 py-3 bg-theme-on-surface-2 border border-theme-stroke rounded-xl text-caption-1 font-mono text-theme-primary focus:outline-none focus:border-primary-1 transition-colors resize-none"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className="flex gap-3 pt-4">
+                                    <button
+                                        onClick={() => setShowCustomStrategyModal(false)}
+                                        className="flex-1 px-6 py-3 border border-theme-stroke hover:bg-theme-on-surface-2 text-theme-primary rounded-xl transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleAddCustomStrategy}
+                                        disabled={!customStrategyName || !customStrategyDescription}
+                                        className="flex-1 px-6 py-3 bg-primary-1 hover:bg-primary-2 text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Add Strategy
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Edit Strategy Modal */}
+                {showEditStrategyModal && editingStrategyId && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-theme-on-surface-1 rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-h5 text-theme-primary">
+                                    Edit Strategy
+                                </h3>
+                                <button
+                                    onClick={() => {
+                                        setShowEditStrategyModal(false);
+                                        setEditingStrategyId(null);
+                                    }}
+                                    className="text-theme-tertiary hover:text-theme-primary"
+                                >
+                                    <Icon className="w-6 h-6 fill-current" name="close" />
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="text-base-2 text-theme-primary mb-2 block">
+                                        Strategy Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={customStrategyName}
+                                        onChange={(e) => setCustomStrategyName(e.target.value)}
+                                        placeholder="e.g., My EMA Crossover"
+                                        className="w-full px-4 py-3 bg-theme-on-surface-2 border border-theme-stroke rounded-xl text-base-2 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-base-2 text-theme-primary mb-2 block">
+                                        Strategy Description
+                                    </label>
+                                    <textarea
+                                        value={customStrategyDescription}
+                                        onChange={(e) => setCustomStrategyDescription(e.target.value)}
+                                        placeholder="Describe your trading strategy..."
+                                        rows={4}
+                                        className="w-full px-4 py-3 bg-theme-on-surface-2 border border-theme-stroke rounded-xl text-base-2 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors resize-none"
+                                    />
+                                </div>
+
+                                {(generatedPineScript || generatedPython) && (
+                                    <div className="space-y-4 border-t border-theme-stroke pt-4">
+                                        <div className="flex items-center justify-between">
+                                            <h4 className="text-title-2 text-theme-primary font-semibold">
+                                                Generated Code
+                                            </h4>
+                                            <button
+                                                onClick={() => setIsEditingCode(!isEditingCode)}
+                                                className="px-3 py-1.5 text-caption-1 text-blue-500 hover:text-blue-600 flex items-center gap-1"
+                                            >
+                                                <Icon className="w-4 h-4 fill-blue-500" name={isEditingCode ? "check" : "edit"} />
+                                                {isEditingCode ? "Done Editing" : "Edit Code"}
+                                            </button>
+                                        </div>
+
+                                        {generatedPython && (
+                                            <div>
+                                                <label className="text-caption-1 text-theme-secondary mb-2 block">
+                                                    Python Code
+                                                </label>
+                                                {isEditingCode ? (
+                                                    <textarea
+                                                        value={generatedPython}
+                                                        onChange={(e) => setGeneratedPython(e.target.value)}
+                                                        rows={10}
+                                                        className="w-full px-4 py-3 bg-theme-on-surface-2 border border-theme-stroke rounded-xl text-caption-1 font-mono text-theme-primary focus:outline-none focus:border-primary-1 transition-colors resize-none"
+                                                    />
+                                                ) : (
+                                                    <pre className="w-full p-4 bg-theme-on-surface-2 border border-theme-stroke rounded-xl text-caption-1 font-mono text-theme-primary overflow-x-auto max-h-64 overflow-y-auto">
+                                                        <code>{generatedPython}</code>
+                                                    </pre>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {generatedPineScript && (
+                                            <div>
+                                                <label className="text-caption-1 text-theme-secondary mb-2 block">
+                                                    PineScript Code
+                                                </label>
+                                                {isEditingCode ? (
+                                                    <textarea
+                                                        value={generatedPineScript}
+                                                        onChange={(e) => setGeneratedPineScript(e.target.value)}
+                                                        rows={10}
+                                                        className="w-full px-4 py-3 bg-theme-on-surface-2 border border-theme-stroke rounded-xl text-caption-1 font-mono text-theme-primary focus:outline-none focus:border-primary-1 transition-colors resize-none"
+                                                    />
+                                                ) : (
+                                                    <pre className="w-full p-4 bg-theme-on-surface-2 border border-theme-stroke rounded-xl text-caption-1 font-mono text-theme-primary overflow-x-auto max-h-64 overflow-y-auto">
+                                                        <code>{generatedPineScript}</code>
+                                                    </pre>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className="flex gap-3 pt-4">
+                                    <button
+                                        onClick={() => {
+                                            setShowEditStrategyModal(false);
+                                            setEditingStrategyId(null);
+                                        }}
+                                        className="flex-1 px-6 py-3 border border-theme-stroke hover:bg-theme-on-surface-2 text-theme-primary rounded-xl transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleUpdateStrategy}
+                                        disabled={!customStrategyName || !customStrategyDescription}
+                                        className="flex-1 px-6 py-3 bg-primary-1 hover:bg-primary-2 text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Update Strategy
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Backtest Modal */}
+                {showBacktestModal && backtestStrategyId && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-theme-on-surface-1 rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-h5 text-theme-primary">
+                                    Backtest Configuration
+                                </h3>
+                                <button
+                                    onClick={() => {
+                                        setShowBacktestModal(false);
+                                        setBacktestStrategyId(null);
+                                        setBacktestResults(null);
+                                    }}
+                                    className="text-theme-tertiary hover:text-theme-primary"
+                                >
+                                    <Icon className="w-6 h-6 fill-current" name="close" />
+                                </button>
+                            </div>
+
+                            {!isBacktesting && !backtestResults && (
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-base-2 text-theme-primary mb-2 block">
+                                                Token Pair
+                                            </label>
+                                            <select
+                                                value={backtestTokenPair}
+                                                onChange={(e) => setBacktestTokenPair(e.target.value)}
+                                                className="w-full px-4 py-3 bg-theme-on-surface-2 border border-theme-stroke rounded-xl text-base-2 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors"
+                                            >
+                                                {["BTC/USDC", "ETH/USDC", "SOL/USDC", "AVAX/USDC", "MATIC/USDC", "LINK/USDC"].map((pair) => (
+                                                    <option key={pair} value={pair}>
+                                                        {pair}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-base-2 text-theme-primary mb-2 block">
+                                                Timeframe
+                                            </label>
+                                            <select
+                                                value={backtestTimeframe}
+                                                onChange={(e) => setBacktestTimeframe(e.target.value)}
+                                                className="w-full px-4 py-3 bg-theme-on-surface-2 border border-theme-stroke rounded-xl text-base-2 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors"
+                                            >
+                                                {["1m", "5m", "15m", "1h", "4h", "1d"].map((tf) => (
+                                                    <option key={tf} value={tf}>
+                                                        {tf}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-base-2 text-theme-primary mb-2 block">
+                                                Start Date
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={backtestStartDate}
+                                                onChange={(e) => setBacktestStartDate(e.target.value)}
+                                                className="w-full px-4 py-3 bg-theme-on-surface-2 border border-theme-stroke rounded-xl text-base-2 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="text-base-2 text-theme-primary mb-2 block">
+                                                End Date
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={backtestEndDate}
+                                                onChange={(e) => setBacktestEndDate(e.target.value)}
+                                                className="w-full px-4 py-3 bg-theme-on-surface-2 border border-theme-stroke rounded-xl text-base-2 text-theme-primary focus:outline-none focus:border-primary-1 transition-colors"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-3 pt-4">
+                                        <button
+                                            onClick={() => {
+                                                setShowBacktestModal(false);
+                                                setBacktestStrategyId(null);
+                                            }}
+                                            className="flex-1 px-6 py-3 border border-theme-stroke hover:bg-theme-on-surface-2 text-theme-primary rounded-xl transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleRunBacktest}
+                                            className="flex-1 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-colors"
+                                        >
+                                            Run Backtest
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {isBacktesting && (
+                                <div className="flex flex-col items-center justify-center py-12">
+                                    <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                                    <p className="text-base-2 text-theme-secondary">
+                                        Running backtest...
+                                    </p>
+                                </div>
+                            )}
+
+                            {backtestResults && !isBacktesting && (
+                                <div className="space-y-6">
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                        <div className="p-4 bg-theme-on-surface-2 rounded-xl">
+                                            <div className="text-caption-2 text-theme-tertiary mb-1">
+                                                Total Return
+                                            </div>
+                                            <div className="text-title-1 text-green-500 font-semibold">
+                                                ${backtestResults.totalReturn.toFixed(2)}
+                                            </div>
+                                            <div className="text-caption-2 text-green-500">
+                                                {backtestResults.totalReturnPercentage.toFixed(2)}%
+                                            </div>
+                                        </div>
+                                        <div className="p-4 bg-theme-on-surface-2 rounded-xl">
+                                            <div className="text-caption-2 text-theme-tertiary mb-1">
+                                                Sharpe Ratio
+                                            </div>
+                                            <div className="text-title-1 text-theme-primary font-semibold">
+                                                {backtestResults.sharpeRatio.toFixed(2)}
+                                            </div>
+                                        </div>
+                                        <div className="p-4 bg-theme-on-surface-2 rounded-xl">
+                                            <div className="text-caption-2 text-theme-tertiary mb-1">
+                                                Max Drawdown
+                                            </div>
+                                            <div className="text-title-1 text-red-500 font-semibold">
+                                                {backtestResults.maxDrawdown.toFixed(2)}%
+                                            </div>
+                                        </div>
+                                        <div className="p-4 bg-theme-on-surface-2 rounded-xl">
+                                            <div className="text-caption-2 text-theme-tertiary mb-1">
+                                                Win Rate
+                                            </div>
+                                            <div className="text-title-1 text-theme-primary font-semibold">
+                                                {backtestResults.winRate.toFixed(1)}%
+                                            </div>
+                                        </div>
+                                        <div className="p-4 bg-theme-on-surface-2 rounded-xl">
+                                            <div className="text-caption-2 text-theme-tertiary mb-1">
+                                                Total Trades
+                                            </div>
+                                            <div className="text-title-1 text-theme-primary font-semibold">
+                                                {backtestResults.totalTrades}
+                                            </div>
+                                        </div>
+                                        <div className="p-4 bg-theme-on-surface-2 rounded-xl">
+                                            <div className="text-caption-2 text-theme-tertiary mb-1">
+                                                Profit Factor
+                                            </div>
+                                            <div className="text-title-1 text-theme-primary font-semibold">
+                                                {backtestResults.profitFactor.toFixed(2)}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-end">
+                                        <button
+                                            onClick={() => {
+                                                setShowBacktestModal(false);
+                                                setBacktestStrategyId(null);
+                                                setBacktestResults(null);
+                                            }}
+                                            className="px-6 py-3 bg-primary-1 hover:bg-primary-2 text-white rounded-xl transition-colors"
+                                        >
+                                            Close
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>

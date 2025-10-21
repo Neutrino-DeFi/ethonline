@@ -192,54 +192,131 @@ const StrategyDetailPage = ({ strategyId }: StrategyDetailPageProps) => {
                     <PerformanceMetrics strategy={strategy} />
                 </Card>
 
-                {/* Sentiment Agent */}
-                <Card title="Sentiment AI Configuration">
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4 md:grid-cols-1">
+                {/* AI Agents Overview */}
+                <Card title="AI Agents Configuration">
+                    <div className="space-y-6">
+                        {/* Agents Summary */}
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {/* Supervisor Agent */}
                             <div className="p-4 bg-theme-on-surface-1 rounded-xl border border-theme-stroke">
-                                <div className="text-caption-2 text-theme-tertiary mb-1">
-                                    Sentiment Agent Weightage
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Icon className="w-5 h-5 fill-orange-500" name="settings" />
+                                    <div className="text-base-2 text-theme-primary font-semibold">
+                                        Supervisor
+                                    </div>
                                 </div>
-                                <div className="text-h5 text-theme-primary">
-                                    {strategy.agenticConfig.weightage}%
+                                <div className="text-caption-2 text-theme-secondary">
+                                    Coordinates all agents
+                                </div>
+                                {strategy.agenticConfig.supervisor?.prompt && (
+                                    <div className="mt-2 text-caption-2 text-theme-tertiary italic">
+                                        Custom prompt configured
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Executor Agent */}
+                            <div className="p-4 bg-theme-on-surface-1 rounded-xl border border-theme-stroke">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Icon className="w-5 h-5 fill-indigo-500" name="trade" />
+                                    <div className="text-base-2 text-theme-primary font-semibold">
+                                        Executor
+                                    </div>
+                                </div>
+                                <div className="text-caption-2 text-theme-secondary">
+                                    Executes trading decisions
+                                </div>
+                                {strategy.agenticConfig.executor?.prompt && (
+                                    <div className="mt-2 text-caption-2 text-theme-tertiary italic">
+                                        Custom prompt configured
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Technical Agent */}
+                            <div className="p-4 bg-theme-on-surface-1 rounded-xl border border-theme-stroke">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Icon className="w-5 h-5 fill-blue-500" name="star" />
+                                    <div className="text-base-2 text-theme-primary font-semibold">
+                                        Technical
+                                    </div>
+                                </div>
+                                <div className="text-caption-2 text-theme-secondary">
+                                    Analyzes technical indicators
+                                </div>
+                                <div className="mt-2 text-title-2 text-blue-500 font-semibold">
+                                    {strategy.agenticConfig.technical?.weightage || 0}%
                                 </div>
                             </div>
+
+                            {/* Sentiment Agent */}
                             <div className="p-4 bg-theme-on-surface-1 rounded-xl border border-theme-stroke">
-                                <div className="text-caption-2 text-theme-tertiary mb-1">
-                                    Technical Strategies
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Icon className="w-5 h-5 fill-yellow-500" name="news" />
+                                    <div className="text-base-2 text-theme-primary font-semibold">
+                                        Sentiment
+                                    </div>
                                 </div>
-                                <div className="text-h5 text-theme-primary">
+                                <div className="text-caption-2 text-theme-secondary">
+                                    Analyzes market sentiment
+                                </div>
+                                <div className="mt-2 text-title-2 text-yellow-500 font-semibold">
+                                    {strategy.agenticConfig.sentiment?.weightage || 0}%
+                                </div>
+                            </div>
+
+                            {/* Web Search Agent */}
+                            <div className="p-4 bg-theme-on-surface-1 rounded-xl border border-theme-stroke">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Icon className="w-5 h-5 fill-purple-500" name="search" />
+                                    <div className="text-base-2 text-theme-primary font-semibold">
+                                        Web Search
+                                    </div>
+                                </div>
+                                <div className="text-caption-2 text-theme-secondary">
+                                    Searches for market insights
+                                </div>
+                                <div className="mt-2 text-title-2 text-purple-500 font-semibold">
+                                    {strategy.agenticConfig.webSearch?.weightage || 0}%
+                                </div>
+                            </div>
+
+                            {/* Technical Strategies Count */}
+                            <div className="p-4 bg-theme-on-surface-1 rounded-xl border border-theme-stroke">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Icon className="w-5 h-5 fill-theme-primary" name="chart" />
+                                    <div className="text-base-2 text-theme-primary font-semibold">
+                                        Strategies
+                                    </div>
+                                </div>
+                                <div className="text-caption-2 text-theme-secondary">
+                                    Active technical strategies
+                                </div>
+                                <div className="mt-2 text-title-2 text-theme-primary font-semibold">
                                     {strategy.technicalStrategies.length}
                                 </div>
                             </div>
                         </div>
 
-                        {strategy.agenticConfig.prompt && (
-                            <div className="p-4 bg-theme-on-surface-1 rounded-xl border border-theme-stroke">
-                                <div className="text-caption-2 text-theme-tertiary mb-2">
-                                    Custom Agentic Prompt
-                                </div>
-                                <div className="text-base-2 text-theme-secondary">
-                                    {strategy.agenticConfig.prompt}
-                                </div>
-                            </div>
-                        )}
-
+                        {/* Technical Strategies List */}
                         {strategy.technicalStrategies.length > 0 && (
                             <div className="p-4 bg-theme-on-surface-1 rounded-xl border border-theme-stroke">
-                                <div className="text-caption-2 text-theme-tertiary mb-3">
+                                <div className="text-base-2 text-theme-primary font-semibold mb-3">
                                     Active Technical Strategies
                                 </div>
                                 <div className="space-y-3">
                                     {strategy.technicalStrategies.map((tech) => (
-                                        <div key={tech.id}>
-                                            <div className="text-base-2s text-theme-primary mb-1">
-                                                {tech.name}
-                                            </div>
-                                            <div className="text-caption-2 text-theme-secondary">
-                                                {tech.isCustom
-                                                    ? tech.customPrompt
-                                                    : tech.description}
+                                        <div key={tech.id} className="flex items-start gap-3">
+                                            <div className="w-2 h-2 rounded-full bg-blue-500 mt-2"></div>
+                                            <div className="flex-1">
+                                                <div className="text-base-2 text-theme-primary mb-1">
+                                                    {tech.name}
+                                                </div>
+                                                <div className="text-caption-2 text-theme-secondary">
+                                                    {tech.isCustom
+                                                        ? tech.customPrompt
+                                                        : tech.description}
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
