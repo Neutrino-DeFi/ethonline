@@ -1222,7 +1222,7 @@
   resolved "https://registry.yarnpkg.com/@marsidev/react-turnstile/-/react-turnstile-0.4.1.tgz#a31531643d23d6f3c056e37c490533f6eb46cffe"
   integrity sha512-uZusUW9mPr0csWpls8bApe5iuRK0YK7H1PCKqfM4djW3OA9GB9rU68irjk7xRO8qlHyj0aDTeVu9tTLPExBO4Q==
 
-"@msgpack/msgpack@3.1.2":
+"@msgpack/msgpack@3.1.2", "@msgpack/msgpack@^3.1.2":
   version "3.1.2"
   resolved "https://registry.yarnpkg.com/@msgpack/msgpack/-/msgpack-3.1.2.tgz#fdd25cc2202297519798bbaf4689152ad9609e19"
   integrity sha512-JEW4DEtBzfe8HvUYecLU9e6+XJnKDlUAIve8FvPzF3Kzs6Xo/KuZkZJsDH0wJXl/qEZbeeE7edxDNY3kMs39hQ==
@@ -1283,6 +1283,17 @@
   version "14.2.2"
   resolved "https://registry.yarnpkg.com/@next/swc-win32-x64-msvc/-/swc-win32-x64-msvc-14.2.2.tgz#95cc0dad2c7ac5177fa6eeab070dccfa30532353"
   integrity sha512-a/20E/wtTJZ3Ykv3f/8F0l7TtgQa2LWHU2oNB9bsu0VjqGuGGHmm/q6waoUNQYTVPYrrlxxaHjJcDV6aiSTt/w==
+
+"@nktkas/hyperliquid@^0.25.4":
+  version "0.25.4"
+  resolved "https://registry.yarnpkg.com/@nktkas/hyperliquid/-/hyperliquid-0.25.4.tgz#1d29e85e4ef6e6d02fffcb15293c582757948620"
+  integrity sha512-o2qGBfB+8pRwfx1ypug7pH70utIwiNt2efsgRqWHjjvd/ZAj10o9et9i9QsFuQMywif2QuFCPfWYHoSF8YQZqg==
+  dependencies:
+    "@msgpack/msgpack" "^3.1.2"
+    "@noble/hashes" "^2.0.0"
+    "@noble/secp256k1" "^3.0.0"
+    typescript-event-target "1.1.1"
+    valibot "1.1.0"
 
 "@noble/ciphers@1.2.1":
   version "1.2.1"
@@ -1360,6 +1371,16 @@
   version "1.8.0"
   resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-1.8.0.tgz#cee43d801fcef9644b11b8194857695acd5f815a"
   integrity sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==
+
+"@noble/hashes@^2.0.0":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-2.0.1.tgz#fc1a928061d1232b0a52bb754393c37a5216c89e"
+  integrity sha512-XlOlEbQcE9fmuXxrVTXCTlG2nlRXa9Rj3rr5Ue/+tX+nmkgbX720YHh0VR3hBF9xDvwnb8D2shVGOwNx+ulArw==
+
+"@noble/secp256k1@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@noble/secp256k1/-/secp256k1-3.0.0.tgz#29711361db8f37b1b7e0b8d80c933013fc887475"
+  integrity sha512-NJBaR352KyIvj3t6sgT/+7xrNyF9Xk9QlLSIqUGVUYlsnDTAUqY8LOmwpcgEx4AMJXRITQ5XEVHD+mMaPfr3mg==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
@@ -6092,6 +6113,11 @@ typed-array-length@^1.0.6:
     is-typed-array "^1.1.13"
     possible-typed-array-names "^1.0.0"
 
+typescript-event-target@1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/typescript-event-target/-/typescript-event-target-1.1.1.tgz#20a6d491b77d2e37dc432c5394ab74c0d7065539"
+  integrity sha512-dFSOFBKV6uwaloBCCUhxlD3Pr/P1a/tJdcmPrTXCHlEFD3faj0mztjcGn6VBAhQ0/Bdy8K3VWrrqwbt/ffsYsg==
+
 typescript@^5:
   version "5.4.5"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.4.5.tgz#42ccef2c571fdbd0f6718b1d1f5e6e5ef006f611"
@@ -6213,6 +6239,11 @@ util-deprecate@^1.0.1, util-deprecate@^1.0.2:
   version "9.0.1"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-9.0.1.tgz#e188d4c8853cc722220392c424cd637f32293f30"
   integrity sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==
+
+valibot@1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/valibot/-/valibot-1.1.0.tgz#873bb1af9e1577391690307bfe0520bd1360ec2d"
+  integrity sha512-Nk8lX30Qhu+9txPYTwM0cFlWLdPFsFr6LblzqIySfbZph9+BFsAHsNvHOymEviUepeIW6KFHzpX8TKhbptBXXw==
 
 valtio@1.13.2:
   version "1.13.2"
