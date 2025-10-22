@@ -183,12 +183,15 @@ const options = {
         name: 'Users',
         description: 'User endpoints',
       },
+      { name: 'Hyperliquid', description: 'Hyperliquid API endpoints (balance, orders)' },
     ],
   },
   apis: [
     './src/routes/*.ts',
+    './src/routes/*/*/.ts',
     './src/routes/*/index.ts',
     './src/controllers/*/*.ts',
+    './src/controllers/*/*/*.ts',
   ],
 };
 
