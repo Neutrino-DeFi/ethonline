@@ -32,6 +32,12 @@ import logger from "../../../utils/logger";
  *                 type: string
  *                 enum: [buy, sell]
  *                 description: Order side (buy or sell)
+ *               tp:
+ *                 type: string
+ *                 description: Order tp (optional)
+ *               sl:
+ *                 type: string
+ *                 description: Order sl (optional)
  *     responses:
  *       201:
  *         description: Order placed successfully
@@ -51,15 +57,15 @@ import logger from "../../../utils/logger";
  */
 export const placeOrder = async (req: Request, res: Response) => {
     try {
-        const { privateKey, coin, size, side } = req.body;
+        const { privateKey, coin, size, side, tp, sl } = req.body;
 
         if (!privateKey || !coin || !size) {
             res.status(400).json({ error: "privateKey, coin and size are required" });
         }
 
-        const orderResult = await HyperliquidClient.placeOrder(privateKey, coin, size, side || "buy");
+        const orderResult = await HyperliquidClient.placeOrder(privateKey, coin, size, side || "buy", tp, sl);
 
-        logger.info("Placed order successfully", { coin, size, side });
+        logger.info("Placed order successfully", { coin, size, side, tp, sl });
 
         res.status(201).json({
             success: true,

@@ -1,13 +1,18 @@
 import * as hl from "@nktkas/hyperliquid";
-import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import { createWalletClient, http } from "viem";
-import { arbitrum } from 'viem/chains';
+import { privateKeyToAccount } from "viem/accounts";
+import { createWalletClient } from "viem";
+import { ethers } from "ethers";
 
 // Set up transport (HTTP or WS) — use testnet flag if needed
 const transport = new hl.HttpTransport({ isTestnet: true });
 
 // Info client for read-only data (balance etc.)
 const infoClient = new hl.InfoClient({ transport });
+
+enum AssetIndex {
+    BTC = 3,
+    ETH = 4,
+}
 
 export class HyperliquidClient {
     /**
@@ -32,64 +37,69 @@ export class HyperliquidClient {
         privateKey: string,
         coin: string,
         size: string,
-        side: "buy" | "sell" = "buy"
+        side: "buy" | "sell" = "buy",
+        tp?: string,
+        sl?: string
     ) {
         try {
             // 1️⃣ Get L2 order book for coin
             const l2Book = await infoClient.l2Book({ coin });
             const bestBid = l2Book.levels[0][0]?.px;
             const bestAsk = l2Book.levels[1][0]?.px;
-            console.log(`📊 Market depth — Bid: ${bestBid}, Ask: ${bestAsk}`);
-
-            //   if (!bestAsk) throw new Error(`Could not get ${coin} market data`);
-
-            // 2️⃣ Compute limit price
-            const limitPrice = (
-                parseFloat(bestAsk) * (side === "buy" ? 0.9 : 1.1)
-            ).toFixed(2);
-
-            console.log(`📊 ${coin} best ask: ${bestAsk}`);
-            console.log(`🎯 Limit price: ${limitPrice}`);
-            console.log(`📦 Order size: ${size}`);
-
-            // 3️⃣ Initialize ExchangeClient with agent wallet
-            // const wallet = new ethers.Wallet(privateKey);
-    //         const agentPrivateKey = generatePrivateKey();
-    // const agentAccount = privateKeyToAccount(agentPrivateKey);
-    // console.log(`🔐 Generated agent private key: ${agentPrivateKey}`);
     
-    // // Create wallet client for the agent (for later use)
-    // const agentWalletClient = createWalletClient({
-    //   account: agentAccount,
-    //   chain: arbitrum,
-    //   transport: http()
-    // });
-    //         const agentExchClient = new hl.ExchangeClient({
-    //             wallet: agentWalletClient,
-    //             transport: transport,
-    //           });
-              
+            console.log(`📊 Market depth — Bid: ${bestBid}, Ask: ${bestAsk}`);
+            console.log(`📦 Order size: ${size}`);
+    
+            // 2️⃣ Initialize wallet and exchange client
+            const wallet = privateKeyToAccount(privateKey as `0xstring`);
+            const agentExchClient = new hl.ExchangeClient({ wallet, transport });
 
-    //         // 4️⃣ Place limit order
-    //         const orderResult = await agentExchClient.order({
-    //             orders: [
-    //                 {
-    //                     a: 0, // asset index (0 for BTC, adjust for SOL/ETH as needed)
-    //                     b: side === "buy", // buy = true, sell = false
-    //                     p: side === "buy" ? bestAsk : bestBid, // reference price
-    //                     s: size,
-    //                     r: false, // reduce-only = false
-    //                     t: { limit: { tif: "FrontendMarket" } }, // market order
-    //                 },
-    //             ],
-    //             grouping: "na",
-    //         });
-
-            // console.log("📝 Order response:", orderResult);
-            return "";
+            const asset = coin === "BTC" ? AssetIndex.BTC : AssetIndex.ETH;
+    
+            // 3️⃣ Prepare main market order
+            const orders: any[] = [
+                {
+                    a: asset, // asset index
+                    b: side === "buy",
+                    p: side === "buy" ? bestAsk : bestBid,
+                    s: size,
+                    r: false, // reduce-only = false
+                    t: { limit: { tif: "FrontendMarket" } }, // time in force
+                },
+            ];
+    
+            // 4️⃣ Add TP order if provided
+            if (tp) {
+                orders.push({
+                    a: asset,
+                    b: side === "buy" ? false : true, // opposite side
+                    p: tp,
+                    s: size,
+                    r: true, // reduce-only
+                    t: { trigger: { isMarket: true, triggerPx: tp, tpsl: "tp" } },
+                });
+            }
+    
+            // 5️⃣ Add SL order if provided
+            if (sl) {
+                orders.push({
+                    a: asset,
+                    b: side === "buy" ? false : true, // opposite side
+                    p: sl,
+                    s: size,
+                    r: true, // reduce-only
+                    t: { trigger: { isMarket: true, triggerPx: sl, tpsl: "sl" } },
+                });
+            }
+    
+            // 6️⃣ Place all orders
+            const orderResult = await agentExchClient.order({ orders, grouping: (tp !== "" && sl !== "") ? "na" : "normalTpsl" });
+    
+            console.log("📝 Order response:", orderResult);
+            return orderResult;
         } catch (error) {
             console.error("❌ Failed to place order:", error);
             throw error;
         }
-    }
+    }    
 }
