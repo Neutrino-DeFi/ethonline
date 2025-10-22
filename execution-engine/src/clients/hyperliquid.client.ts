@@ -1,7 +1,7 @@
 import * as hl from "@nktkas/hyperliquid";
-import { privateKeyToAccount } from "viem/accounts";
-import { createWalletClient } from "viem";
-import { ethers } from "ethers";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+import { createWalletClient, http } from "viem";
+import { arbitrum } from 'viem/chains';
 
 // Set up transport (HTTP or WS) — use testnet flag if needed
 const transport = new hl.HttpTransport({ isTestnet: true });
@@ -53,29 +53,40 @@ export class HyperliquidClient {
             console.log(`📦 Order size: ${size}`);
 
             // 3️⃣ Initialize ExchangeClient with agent wallet
-            const wallet = new ethers.Wallet(privateKey);
-            const agentExchClient = new hl.ExchangeClient({
-                wallet,
-                transport,
-            });
+            // const wallet = new ethers.Wallet(privateKey);
+    //         const agentPrivateKey = generatePrivateKey();
+    // const agentAccount = privateKeyToAccount(agentPrivateKey);
+    // console.log(`🔐 Generated agent private key: ${agentPrivateKey}`);
+    
+    // // Create wallet client for the agent (for later use)
+    // const agentWalletClient = createWalletClient({
+    //   account: agentAccount,
+    //   chain: arbitrum,
+    //   transport: http()
+    // });
+    //         const agentExchClient = new hl.ExchangeClient({
+    //             wallet: agentWalletClient,
+    //             transport: transport,
+    //           });
+              
 
-            // 4️⃣ Place limit order
-            const orderResult = await agentExchClient.order({
-                orders: [
-                    {
-                        a: 0, // asset index (0 for BTC, adjust for SOL/ETH as needed)
-                        b: side === "buy", // buy = true, sell = false
-                        p: side === "buy" ? bestAsk : bestBid, // reference price
-                        s: size,
-                        r: false, // reduce-only = false
-                        t: { limit: { tif: "FrontendMarket" } }, // market order
-                    },
-                ],
-                grouping: "na",
-            });
+    //         // 4️⃣ Place limit order
+    //         const orderResult = await agentExchClient.order({
+    //             orders: [
+    //                 {
+    //                     a: 0, // asset index (0 for BTC, adjust for SOL/ETH as needed)
+    //                     b: side === "buy", // buy = true, sell = false
+    //                     p: side === "buy" ? bestAsk : bestBid, // reference price
+    //                     s: size,
+    //                     r: false, // reduce-only = false
+    //                     t: { limit: { tif: "FrontendMarket" } }, // market order
+    //                 },
+    //             ],
+    //             grouping: "na",
+    //         });
 
-            console.log("📝 Order response:", orderResult);
-            return orderResult;
+            // console.log("📝 Order response:", orderResult);
+            return "";
         } catch (error) {
             console.error("❌ Failed to place order:", error);
             throw error;
