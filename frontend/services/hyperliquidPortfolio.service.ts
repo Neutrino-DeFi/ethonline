@@ -9,7 +9,7 @@ const infoClient = new hl.InfoClient({
 export const getOpenOrders = async (user: string) => {
   // 3. Query data
   const openOrders = await infoClient.openOrders({
-    user: "0x056f95A573Ec524F5d188c01E50a642BfaAF34F6",
+    user: user,
   });
 
   return openOrders;
@@ -22,6 +22,7 @@ export const getUserPositions = async (
   const positions = await infoClient.clearinghouseState({
     type: "clearinghouseState",
     user: user,
+    // user: "0x056f95A573Ec524F5d188c01E50a642BfaAF34F6",
   });
 
   return positions;
@@ -31,7 +32,7 @@ export const getUserTradeHistory = async (user: string) => {
   // 4. Positions
   const tradeHistory = await infoClient.userFills({
     type: "userFills",
-    user: "0x056f95A573Ec524F5d188c01E50a642BfaAF34F6",
+    user: user,
   });
 
   return tradeHistory;
@@ -41,7 +42,7 @@ export const getUserPortfolio = async (user: string) => {
   // 4. Positions
   const portfolio = await infoClient.portfolio({
     type: "portfolio",
-    user: "0x056f95A573Ec524F5d188c01E50a642BfaAF34F6",
+    user: user,
   });
 
   return portfolio;

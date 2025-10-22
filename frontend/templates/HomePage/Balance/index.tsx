@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useColorMode } from "@chakra-ui/color-mode";
+import { usePrivy } from "@privy-io/react-auth";
 import Card from "@/components/Card";
 import CurrencyFormat from "@/components/CurrencyFormat";
 import Percent from "@/components/Percent";
 
 import { chartBalanceHome } from "@/mocks/charts";
+import { getUserPositions } from "../../../services/hyperliquidPortfolio.service";
 
 const duration = [
     {
@@ -45,8 +47,38 @@ type BalanceProps = {};
 
 const Balance = ({}: BalanceProps) => {
     const [time, setTime] = useState(duration[0]);
+    const [accountValue, setAccountValue] = useState<number>(0);
+    const [loading, setLoading] = useState<boolean>(true);
     const { colorMode } = useColorMode();
     const isDarkMode = colorMode === "dark";
+    const { authenticated, user } = usePrivy();
+
+    useEffect(() => {
+        const fetchPortfolioData = async () => {
+            if (authenticated && user) {
+                try {
+                    setLoading(true);
+                    // Get wallet address from Privy user
+                    const wallet = user.linkedAccounts?.find(
+                        (account) => account.type === "wallet"
+                    );
+
+                    if (wallet && "address" in wallet) {
+                        const positions = await getUserPositions(wallet.address);
+                        if (positions?.marginSummary?.accountValue) {
+                            setAccountValue(parseFloat(positions.marginSummary.accountValue));
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error fetching portfolio data:", error);
+                } finally {
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchPortfolioData();
+    }, [authenticated, user]);
 
     return (
         <Card
@@ -59,10 +91,9 @@ const Balance = ({}: BalanceProps) => {
             <div className="flex items-end md:mt-4">
                 <CurrencyFormat
                     className="text-h1 md:text-h3"
-                    value={3200.8}
+                    value={loading ? 0 : accountValue}
                     currency="$"
                 />
-                <Percent className="ml-1 text-title-1s" value={85.66} />
             </div>
             <div className="h-[14rem] -mb-2">
                 <ResponsiveContainer width="100%" height="100%">
