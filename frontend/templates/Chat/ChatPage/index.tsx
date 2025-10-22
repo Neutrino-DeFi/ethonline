@@ -4,11 +4,11 @@ import Layout from "@/components/Layout";
 import Chat from "@/components/Chat";
 
 const ChatPage = () => {
-    return (
-        <Layout title="Neura AI">
-            <Chat />
-        </Layout>
-    );
+  return (
+    <Layout title="Neutrino AI">
+      <Chat />
+    </Layout>
+  );
 };
 
 export default ChatPage;
