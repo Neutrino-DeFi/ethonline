@@ -21,8 +21,8 @@ export const getUserPositions = async (
   // 4. Positions
   const positions = await infoClient.clearinghouseState({
     type: "clearinghouseState",
-    user: user,
-    // user: "0x056f95A573Ec524F5d188c01E50a642BfaAF34F6",
+    // user: user,
+    user: "0x056f95A573Ec524F5d188c01E50a642BfaAF34F6",
   });
 
   return positions;
@@ -32,7 +32,8 @@ export const getUserTradeHistory = async (user: string) => {
   // 4. Positions
   const tradeHistory = await infoClient.userFills({
     type: "userFills",
-    user: user,
+    // user: user,
+    user: "0x056f95A573Ec524F5d188c01E50a642BfaAF34F6",
   });
 
   return tradeHistory;
