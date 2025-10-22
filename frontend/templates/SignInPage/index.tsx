@@ -9,6 +9,8 @@ import Field from "@/components/Field";
 
 import { usePrivy } from "@privy-io/react-auth";
 
+import { registerUser } from "services/user.service";
+
 const SignInPage = () => {
   const { colorMode } = useColorMode();
   const router = useRouter();
@@ -29,6 +31,8 @@ const SignInPage = () => {
   useEffect(() => {
     if (authenticated && user) {
       console.log("User authenticated:", user);
+      //TODO: NILESH
+      registerUser(user.id, user.linkedAccounts[0].address);
       router.push("/dashboard");
     }
   }, [authenticated, user, router]);

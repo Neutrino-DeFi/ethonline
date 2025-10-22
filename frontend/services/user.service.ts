@@ -14,6 +14,7 @@ export const registerUser = async (walletId: string, walletAddress: string) => {
       payload
     );
 
+    console.log("User registered successfully:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error registering user:", error);
