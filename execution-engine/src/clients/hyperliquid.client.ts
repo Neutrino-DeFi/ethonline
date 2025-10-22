@@ -1,7 +1,5 @@
 import * as hl from "@nktkas/hyperliquid";
 import { privateKeyToAccount } from "viem/accounts";
-import { createWalletClient } from "viem";
-import { ethers } from "ethers";
 
 // Set up transport (HTTP or WS) — use testnet flag if needed
 const transport = new hl.HttpTransport({ isTestnet: true });
