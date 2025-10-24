@@ -3,39 +3,83 @@
 import { useEffect, useState } from "react";
 import { useColorMode } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { usePrivy } from "@privy-io/react-auth";
+import { Chain, ClientConfig, createWalletClient, custom, EIP1193RequestFn, http, TransportConfig } from "viem";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+import { arbitrum } from "viem/chains";
+import { getUserDetails, registerUser } from "services/user.service";
 import Login from "@/components/Login";
 import Field from "@/components/Field";
-
-import { usePrivy } from "@privy-io/react-auth";
-
-import { registerUser } from "services/user.service";
+import * as hl from "@nktkas/hyperliquid";
+import { useWallets } from "@privy-io/react-auth";
 
 const SignInPage = () => {
   const { colorMode } = useColorMode();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const { ready, authenticated, login, logout, user } = usePrivy();
+  const { wallets } = useWallets();
 
   useEffect(() => {
-    if (ready) {
-      console.log("Privy is ready");
-      console.log("Authenticated:", authenticated);
-      console.log("User:", user);
-    }
-  }, [ready, authenticated, user]);
+    if (!ready) return;
+    if (!authenticated || !user) return;
 
-  // Redirect to dashboard when user is authenticated
-  useEffect(() => {
-    if (authenticated && user) {
-      console.log("User authenticated:", user);
-      //TODO: NILESH
-      registerUser(user.id, user.linkedAccounts[0].address);
+    (async () => {
+    const wallet = wallets[0]; // assuming user connected one wallet
+    if (!wallet) throw new Error("No wallet connected");
+
+      const connectedWallet = wallet.address;
+      console.log("✅ Connected wallet:", connectedWallet);
+
+      // STEP 1: Check if user exists in backend
+      const existingUser = await getUserDetails(user.id);
+      console.log(existingUser)
+      if (existingUser?.exists) {
+        console.log("User already registered:", existingUser);
+        router.push("/dashboard");
+        return;
+      }
+
+      // STEP 2: Create API wallet (agent)
+      const agentPrivateKey = generatePrivateKey();
+      const agentAccount = privateKeyToAccount(agentPrivateKey);
+      console.log("🆕 Generated agent wallet:", agentAccount.address, agentPrivateKey);
+
+      // STEP 3: Ask user to sign a message approving the API wallet
+      const provider = await wallet.getEthereumProvider();
+      const walletClient = createWalletClient({
+        account: wallet.address as `0x${string}`,
+        chain: arbitrum, // or your desired chain
+        transport: custom(provider),
+      });
+
+      const transport = new hl.HttpTransport({ isTestnet: true });
+      const mainExchClient = new hl.ExchangeClient({
+        wallet: walletClient,
+        transport,
+      });
+
+      console.log("🧾 Approving API wallet on Hyperliquid...");
+      const approveTx = await mainExchClient.approveAgent({
+        agentAddress: agentAccount.address,
+      });
+      console.log("✅ Agent approval TX:", approveTx);
+
+      // STEP 4: Register user with API wallet + signature
+      await registerUser(
+        user.id,
+        connectedWallet,
+        {
+          address: agentAccount.address,
+          privateKey: agentPrivateKey,
+        }
+      );
+
+      console.log("✅ User registered successfully");
       router.push("/dashboard");
-    }
-  }, [authenticated, user, router]);
+    })();
+  }, [ready, authenticated, user, router, wallets]);
 
   const handleSignIn = () => {
     // TODO: Add actual authentication logic here
