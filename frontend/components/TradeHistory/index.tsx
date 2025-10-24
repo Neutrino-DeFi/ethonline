@@ -18,7 +18,7 @@ type TradeHistoryItem = {
   fee: string;
   tid: number;
   feeToken: string;
-  twapId: null | string;
+  twapId: null | number;
 };
 
 type TradeHistoryProps = {};

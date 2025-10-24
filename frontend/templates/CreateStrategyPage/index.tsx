@@ -296,11 +296,12 @@ plot(sma50, color=color.red)`;
       }
 
       // Add technical agent with voting power
-      if (technicalAgent && formData.technical.weightage > 0) {
+      const technicalWeightage = formData.technical?.weightage ?? 0;
+      if (technicalAgent && technicalWeightage > 0) {
         agentConfigs.push({
           agentId: technicalAgent._id,
-          votingPower: formData.technical.weightage / 100, // Convert percentage to decimal
-          customPrompt: formData.technical.prompt || "",
+          votingPower: technicalWeightage / 100, // Convert percentage to decimal
+          customPrompt: formData.technical?.prompt || "",
           code:
             formData.selectedTechnicalStrategies.length > 0
               ? JSON.stringify(formData.selectedTechnicalStrategies)
@@ -309,21 +310,21 @@ plot(sma50, color=color.red)`;
       }
 
       // Add sentiment agent with voting power
-      if (sentimentAgent && formData.sentiment.weightage > 0) {
+      if (sentimentAgent && (formData.sentiment?.weightage ?? 0) > 0) {
         agentConfigs.push({
           agentId: sentimentAgent._id,
-          votingPower: formData.sentiment.weightage / 100, // Convert percentage to decimal
-          customPrompt: formData.sentiment.prompt || "",
+          votingPower: (formData.sentiment?.weightage ?? 0) / 100, // Convert percentage to decimal
+          customPrompt: formData.sentiment?.prompt || "",
           code: {},
         });
       }
 
       // Add web search agent with voting power
-      if (webSearchAgent && formData.webSearch.weightage > 0) {
+      if (webSearchAgent && (formData.webSearch?.weightage ?? 0) > 0) {
         agentConfigs.push({
           agentId: webSearchAgent._id,
-          votingPower: formData.webSearch.weightage / 100, // Convert percentage to decimal
-          customPrompt: formData.webSearch.prompt || "",
+          votingPower: (formData.webSearch?.weightage ?? 0) / 100, // Convert percentage to decimal
+          customPrompt: formData.webSearch?.prompt || "",
           code: {},
         });
       }
