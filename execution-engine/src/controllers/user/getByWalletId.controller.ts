@@ -35,17 +35,24 @@ export const getUserByWalletId = async (
       });
     }
 
-    const user = await User.findOne({ uniqueWalletId });
+    const user = await User.findOne({ uniqueWalletId }).lean();;
 
     if (!user) {
-      res.status(404).json({
-        error: "User not found",
-        uniqueWalletId,
+      res.status(200).json({
+        success: false,
+        exists: false,
+        message: "User not found",
       });
+    }
+
+    if (user.apiWallet?.privateKey) {
+      const pk = user.apiWallet.privateKey;
+      user.apiWallet.privateKey = "********";
     }
 
     res.status(200).json({
       success: true,
+      exists: true,
       data: user,
     });
   } catch (err: any) {
