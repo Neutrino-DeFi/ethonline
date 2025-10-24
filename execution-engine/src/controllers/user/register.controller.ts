@@ -63,10 +63,14 @@ export const registerUser = async (req: Request, res: Response) => {
   // }
 
   try {
-    const { uniqueWalletId, walletAddress } = req.body;
+    const { uniqueWalletId, walletAddress, apiWallet } = req.body;
 
     if (!uniqueWalletId || !walletAddress) {
       return res.status(400).json({ error: "Missing required fields" });
+    }
+
+     if (!apiWallet?.address || !apiWallet?.privateKey) {
+      return res.status(400).json({ error: "apiWallet.address and apiWallet.privateKey are required" });
     }
 
     // Check if user already exists
@@ -83,6 +87,7 @@ export const registerUser = async (req: Request, res: Response) => {
     const newUser = new User({
       uniqueWalletId,
       walletAddress,
+      apiWallet,
       createdAt: new Date(),
       lastLoginAt: new Date(),
     });
