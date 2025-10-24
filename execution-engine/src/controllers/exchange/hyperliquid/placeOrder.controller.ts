@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { HyperliquidClient } from "../../../clients/hyperliquid.client";
 import logger from "../../../utils/logger";
+import { User } from "../../../models/user.model";
 
 /**
  * @swagger
@@ -15,13 +16,13 @@ import logger from "../../../utils/logger";
  *           schema:
  *             type: object
  *             required:
- *               - privateKey
+ *               - userId
  *               - coin
  *               - size
  *             properties:
- *               privateKey:
+ *               userId:
  *                 type: string
- *                 description: Private key of the agent wallet
+ *                 description: Privy user id of the user
  *               coin:
  *                 type: string
  *                 description: Symbol of the coin to trade (e.g., BTC)
@@ -57,13 +58,22 @@ import logger from "../../../utils/logger";
  */
 export const placeOrder = async (req: Request, res: Response) => {
     try {
-        const { privateKey, coin, size, side, tp, sl } = req.body;
+        const { userId, coin, size, side, tp, sl } = req.body;
 
-        if (!privateKey || !coin || !size) {
-            res.status(400).json({ error: "privateKey, coin and size are required" });
+        if (!userId || !coin || !size) {
+            res.status(400).json({ error: "userId, coin and size are required" });
         }
 
-        const orderResult = await HyperliquidClient.placeOrder(privateKey, coin, size, side || "buy", tp, sl);
+        const user = await User.findOne({ uniqueWalletId: userId }).lean();
+        
+        if (!user) {
+            res.status(500).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        const orderResult = await HyperliquidClient.placeOrder(user.apiWallet.privateKey, coin, size, side || "buy", tp, sl);
 
         logger.info("Placed order successfully", { coin, size, side, tp, sl });
 
