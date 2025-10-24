@@ -27,7 +27,7 @@ const SignInPage = () => {
 
     (async () => {
     const wallet = wallets[0]; // assuming user connected one wallet
-    if (!wallet) throw new Error("No wallet connected");
+    if (!wallet) return;
 
       const connectedWallet = wallet.address;
       console.log("✅ Connected wallet:", connectedWallet);
