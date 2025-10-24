@@ -14,6 +14,7 @@ const Deposit = ({}: DepositProps) => {
     const [depositStep, setDepositStep] = useState<"bridge" | "transfer">("bridge");
     const [isTransferring, setIsTransferring] = useState(false);
     const [providerReady, setProviderReady] = useState(false);
+    const [bridgeCompleted, setBridgeCompleted] = useState(false);
     const { wallets } = useWallets();
     const { setProvider } = useNexus();
 
@@ -146,24 +147,31 @@ const Deposit = ({}: DepositProps) => {
                             }}
                         >
                             {({ onClick, isLoading }) => (
-                                <button
-                                    className="btn-primary w-full mt-6"
-                                    onClick={async () => {
-                                        try {
-                                            await onClick();
-                                            // After successful bridge, move to transfer step
-                                            // Note: User needs to manually proceed after bridge completes
-                                            alert("Bridge transaction submitted! Once confirmed, proceed to transfer to vault.");
-                                            setDepositStep("transfer");
-                                        } catch (error) {
-                                            console.error("Bridge failed:", error);
-                                            alert("Bridge failed. Make sure you have USDC on a supported chain.");
-                                        }
-                                    }}
-                                    disabled={!amount || parseFloat(amount) <= 0 || isLoading}
-                                >
-                                    {isLoading ? "Bridging..." : "Bridge to Arbitrum Sepolia"}
-                                </button>
+                                <>
+                                    <button
+                                        className="btn-primary w-full mt-6"
+                                        onClick={async () => {
+                                            try {
+                                                await onClick();
+                                                // Bridge completed successfully
+                                                setBridgeCompleted(true);
+                                            } catch (error) {
+                                                console.error("Bridge failed:", error);
+                                            }
+                                        }}
+                                        disabled={!amount || parseFloat(amount) <= 0 || isLoading || bridgeCompleted}
+                                    >
+                                        {isLoading ? "Bridging..." : bridgeCompleted ? "Bridge Completed ✓" : "Bridge to Arbitrum Sepolia"}
+                                    </button>
+                                    {bridgeCompleted && (
+                                        <button
+                                            className="btn-secondary w-full mt-3"
+                                            onClick={() => setDepositStep("transfer")}
+                                        >
+                                            Proceed to Transfer to Vault →
+                                        </button>
+                                    )}
+                                </>
                             )}
                         </BridgeButton>
                     )}
@@ -197,7 +205,10 @@ const Deposit = ({}: DepositProps) => {
                         </button>
                         <button
                             className="btn-secondary w-full"
-                            onClick={() => setDepositStep("bridge")}
+                            onClick={() => {
+                                setDepositStep("bridge");
+                                setBridgeCompleted(false);
+                            }}
                             disabled={isTransferring}
                         >
                             Back
