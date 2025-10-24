@@ -1,5 +1,6 @@
 import { Menu, MenuButton, MenuItems, Transition } from "@headlessui/react";
-import { useColorMode } from "@chakra-ui/color-mode";
+// import { useColorMode } from "@chakra-ui/color-mode";
+import { useColorMode } from "@chakra-ui/react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";

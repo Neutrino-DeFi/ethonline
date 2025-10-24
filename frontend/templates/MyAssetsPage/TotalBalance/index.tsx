@@ -8,7 +8,8 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
-import { useColorMode } from "@chakra-ui/color-mode";
+// import { useColorMode } from "@chakra-ui/color-mode";
+import { useColorMode } from "@chakra-ui/react";
 import { usePrivy } from "@privy-io/react-auth";
 import Card from "@/components/Card";
 import CurrencyFormat from "@/components/CurrencyFormat";
