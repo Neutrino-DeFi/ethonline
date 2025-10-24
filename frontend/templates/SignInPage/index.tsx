@@ -21,6 +21,9 @@ import Field from "@/components/Field";
 import * as hl from "@nktkas/hyperliquid";
 import { useWallets } from "@privy-io/react-auth";
 
+import { useNexus } from "@avail-project/nexus-widgets";
+import { TransferButton } from "@avail-project/nexus-widgets";
+
 const SignInPage = () => {
   const { colorMode } = useColorMode();
   const router = useRouter();
@@ -28,10 +31,13 @@ const SignInPage = () => {
   const [password, setPassword] = useState("");
   const { ready, authenticated, login, logout, user } = usePrivy();
   const { wallets } = useWallets();
+  const { setProvider } = useNexus();
 
   useEffect(() => {
     if (!ready) return;
     if (!authenticated || !user) return;
+
+    wallets[0]?.getEthereumProvider().then(setProvider);
 
     (async () => {
       const wallet = wallets[0]; // assuming user connected one wallet

@@ -4,6 +4,7 @@ import { ChakraProvider, ColorModeScript } from "@chakra-ui/react";
 import theme from "./theme";
 
 import { PrivyProvider } from "@privy-io/react-auth";
+import { NexusProvider } from "@avail-project/nexus-widgets";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -22,7 +23,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
           },
         }}
       >
-        <ChakraProvider>{children}</ChakraProvider>
+        <NexusProvider
+          config={{
+            debug: false, // true to view debug logs
+            network: "testnet", // "mainnet" (default) or "testnet"
+          }}
+        >
+          <ChakraProvider>{children}</ChakraProvider>
+        </NexusProvider>
       </PrivyProvider>
     </>
   );
