@@ -3,7 +3,7 @@ import * as hl from "@nktkas/hyperliquid";
 
 // 2. Set up client with transport
 const infoClient = new hl.InfoClient({
-  transport: new hl.HttpTransport(), // or `WebSocketTransport`
+  transport: new hl.HttpTransport({ isTestnet: true }), // or `WebSocketTransport`
 });
 
 export const getOpenOrders = async (user: string) => {
@@ -21,8 +21,8 @@ export const getUserPositions = async (
   // 4. Positions
   const positions = await infoClient.clearinghouseState({
     type: "clearinghouseState",
-    // user: user,
-    user: "0x056f95A573Ec524F5d188c01E50a642BfaAF34F6",
+    user: user,
+    // user: "0x056f95A573Ec524F5d188c01E50a642BfaAF34F6",
   });
 
   return positions;
@@ -32,8 +32,8 @@ export const getUserTradeHistory = async (user: string) => {
   // 4. Positions
   const tradeHistory = await infoClient.userFills({
     type: "userFills",
-    // user: user,
-    user: "0x056f95A573Ec524F5d188c01E50a642BfaAF34F6",
+    user: user,
+    // user: "0x056f95A573Ec524F5d188c01E50a642BfaAF34F6",
   });
 
   return tradeHistory;

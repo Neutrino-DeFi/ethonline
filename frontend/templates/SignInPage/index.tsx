@@ -4,7 +4,15 @@ import { useEffect, useState } from "react";
 import { useColorMode } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import { usePrivy } from "@privy-io/react-auth";
-import { Chain, ClientConfig, createWalletClient, custom, EIP1193RequestFn, http, TransportConfig } from "viem";
+import {
+  Chain,
+  ClientConfig,
+  createWalletClient,
+  custom,
+  EIP1193RequestFn,
+  http,
+  TransportConfig,
+} from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { arbitrum } from "viem/chains";
 import { getUserDetails, registerUser } from "services/user.service";
@@ -26,25 +34,29 @@ const SignInPage = () => {
     if (!authenticated || !user) return;
 
     (async () => {
-    const wallet = wallets[0]; // assuming user connected one wallet
-    if (!wallet) return;
+      const wallet = wallets[0]; // assuming user connected one wallet
+      if (!wallet) return;
 
       const connectedWallet = wallet.address;
       console.log("✅ Connected wallet:", connectedWallet);
 
       // STEP 1: Check if user exists in backend
       const existingUser = await getUserDetails(user.id);
-      console.log(existingUser)
+      console.log(existingUser);
       if (existingUser?.exists) {
         console.log("User already registered:", existingUser);
-        router.push("/dashboard");
+        router.push("/my-assets");
         return;
       }
 
       // STEP 2: Create API wallet (agent)
       const agentPrivateKey = generatePrivateKey();
       const agentAccount = privateKeyToAccount(agentPrivateKey);
-      console.log("🆕 Generated agent wallet:", agentAccount.address, agentPrivateKey);
+      console.log(
+        "🆕 Generated agent wallet:",
+        agentAccount.address,
+        agentPrivateKey
+      );
 
       // STEP 3: Ask user to sign a message approving the API wallet
       const provider = await wallet.getEthereumProvider();
@@ -67,24 +79,20 @@ const SignInPage = () => {
       console.log("✅ Agent approval TX:", approveTx);
 
       // STEP 4: Register user with API wallet + signature
-      await registerUser(
-        user.id,
-        connectedWallet,
-        {
-          address: agentAccount.address,
-          privateKey: agentPrivateKey,
-        }
-      );
+      await registerUser(user.id, connectedWallet, {
+        address: agentAccount.address,
+        privateKey: agentPrivateKey,
+      });
 
       console.log("✅ User registered successfully");
-      router.push("/dashboard");
+      router.push("/my-assets");
     })();
   }, [ready, authenticated, user, router, wallets]);
 
   const handleSignIn = () => {
     // TODO: Add actual authentication logic here
     // For now, redirect to dashboard after sign in
-    router.push("/dashboard");
+    router.push("/my-assets");
   };
 
   const handleConnectWallet = () => {

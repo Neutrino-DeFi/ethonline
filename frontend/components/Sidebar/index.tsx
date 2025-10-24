@@ -76,7 +76,7 @@ const Sidebar = ({ className, visible, onClick }: SidebarProps) => {
                         />
                     ))}
                 </div>
-                {visible && <UpgradeToPro />}
+                {/* {visible && <UpgradeToPro />} */}
                 <div className="hidden flex-col mt-6 pt-4 border-t border-theme-stroke space-y-1 md:flex">
                     <NavLink
                         title="Contact support"

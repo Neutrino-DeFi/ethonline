@@ -71,7 +71,7 @@ const Header = ({ title, visible, showMenu, onClickBurger }: HeaderProps) => {
                         >
                             Deposit
                         </button>
-                        <button
+                        {/* <button
                             className="group w-12 h-12 outline-none md:w-8 md:h-8"
                             onClick={() => setVisibleModalSearch(true)}
                         >
@@ -79,8 +79,8 @@ const Header = ({ title, visible, showMenu, onClickBurger }: HeaderProps) => {
                                 className="fill-theme-secondary transition-colors group-hover:fill-theme-primary"
                                 name="search"
                             />
-                        </button>
-                        <Notifications />
+                        </button> */}
+                        {/* <Notifications /> */}
                         <button
                             className={`hidden rounded-full transition-shadow md:block ${
                                 showMenu

@@ -37,7 +37,7 @@ const BestToBuy = ({}: BestToBuyProps) => {
                 <div className="pt-6">
                     <CurrencyFormat
                         className="mb-3 text-h3"
-                        value={3326.18}
+                        value={3980.80} // TODO: Price Update ETH
                         currency="$"
                     />
                     <div className="flex items-center">
@@ -54,7 +54,7 @@ const BestToBuy = ({}: BestToBuyProps) => {
                             Ethereum{" "}
                             <span className="text-theme-tertiary">ETH</span>
                         </div>
-                        <Percent className="ml-2 text-base-2" value={12.32} />
+                        <Percent className="ml-2 text-base-2" value={2.73} />
                     </div>
                     <div className="h-38 my-2 -mx-6 md:-mx-4">
                         <ResponsiveContainer width="100%" height="100%">
