@@ -180,26 +180,8 @@ def get_indicator(
         interpretation = "\n".join(interpretation_parts)
 
         return {
-            "status": "success",
-            "endpoint": endpoint_lower,
-            "symbol": symbol,
-            "interval": interval,
-            "exchange": exchange,
-            "results_requested": results,
-            "metadata": {
-                "name": metadata['name'],
-                "category": metadata['category'],
-                "description": metadata['description'],
-                "signal_meaning": metadata['signal'],
-                "benefits": metadata['benefits'],
-                "inference_guide": metadata['inference'],
-                "timeframe": metadata['timeframe'],
-                "risk_level": metadata['risk_level'],
-                "use_case": metadata['use_case']
-            },
             "data": data,
-            "interpretation": interpretation,
-            "url": BASE_URL
+            
         }
 
     except httpx.HTTPStatusError as e:
