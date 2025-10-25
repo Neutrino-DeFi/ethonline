@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
 
 export const createStrategy = async (userId: string, strategyData: any) => {
   try {
@@ -83,6 +84,8 @@ export const getUserStrategies = async (userId: string) => {
     const response = await axios.get(
       `${API_BASE_URL}/api/strategies/user/${userId}`
     );
+
+    console.log("Strategies: ", response.data);
 
     return response.data;
   } catch (error) {

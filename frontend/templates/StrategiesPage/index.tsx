@@ -8,6 +8,7 @@ import Icon from "@/components/Icon";
 import { Strategy } from "@/types/strategy";
 import StrategyList from "./StrategyList";
 import { getUserStrategies, deleteStrategy } from "../../services/strategy.service";
+import { getUserId } from "../../utils/userStorage";
 
 const StrategiesPage = () => {
   const router = useRouter();
@@ -18,7 +19,14 @@ const StrategiesPage = () => {
     const fetchStrategies = async () => {
       try {
         setLoading(true);
-        const userId = "68f4f45901332fe98e0ac7e0"; // Hardcoded user ID for now
+        const userId = getUserId();
+
+        if (!userId) {
+          console.error("No user ID found. Please log in.");
+          router.push("/sign-in");
+          return;
+        }
+
         const response = await getUserStrategies(userId);
         setStrategies(response);
       } catch (error) {

@@ -23,6 +23,7 @@ import { useWallets } from "@privy-io/react-auth";
 
 import { useNexus } from "@avail-project/nexus-widgets";
 import { TransferButton } from "@avail-project/nexus-widgets";
+import { saveUserData } from "../../utils/userStorage";
 
 const SignInPage = () => {
   const { colorMode } = useColorMode();
@@ -51,6 +52,15 @@ const SignInPage = () => {
       console.log(existingUser);
       if (existingUser?.exists) {
         console.log("User already registered:", existingUser);
+
+        // Save user data to localStorage
+        saveUserData({
+          userId: existingUser.data._id,
+          uniqueWalletId: existingUser.data.uniqueWalletId,
+          walletAddress: existingUser.data.walletAddress,
+          apiWallet: existingUser.data.apiWallet,
+        });
+
         router.push("/my-assets");
         return;
       }
@@ -85,12 +95,23 @@ const SignInPage = () => {
       console.log("✅ Agent approval TX:", approveTx);
 
       // STEP 4: Register user with API wallet + signature
-      await registerUser(user.id, connectedWallet, {
+      const registrationResponse = await registerUser(user.id, connectedWallet, {
         address: agentAccount.address,
         privateKey: agentPrivateKey,
       });
 
-      console.log("✅ User registered successfully");
+      console.log("✅ User registered successfully", registrationResponse);
+
+      // Save user data to localStorage
+      if (registrationResponse?.data) {
+        saveUserData({
+          userId: registrationResponse.data._id,
+          uniqueWalletId: registrationResponse.data.uniqueWalletId,
+          walletAddress: registrationResponse.data.walletAddress,
+          apiWallet: registrationResponse.data.apiWallet,
+        });
+      }
+
       router.push("/my-assets");
     })();
   }, [ready, authenticated, user, router, wallets]);

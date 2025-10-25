@@ -10,6 +10,7 @@ import PerformanceMetrics from "./PerformanceMetrics";
 import AgenticDecisions from "./AgenticDecisions";
 import PositionsList from "./PositionsList";
 import { getUsersStrategy } from "../../services/strategy.service";
+import { getUserId } from "../../utils/userStorage";
 
 type StrategyDetailPageProps = {
   strategyId: string;
@@ -27,7 +28,14 @@ const StrategyDetailPage = ({ strategyId }: StrategyDetailPageProps) => {
     const fetchStrategy = async () => {
       try {
         setLoading(true);
-        const userId = "68f4f45901332fe98e0ac7e0"; // Hardcoded user ID for now
+        const userId = getUserId();
+
+        if (!userId) {
+          console.error("No user ID found. Please log in.");
+          router.push("/sign-in");
+          return;
+        }
+
         const response = await getUsersStrategy(userId, strategyId);
         setStrategy(response);
       } catch (error) {

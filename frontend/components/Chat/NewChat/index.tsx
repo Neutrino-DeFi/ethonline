@@ -457,7 +457,7 @@ const AgentChat = ({
               AI Agent Collaboration
             </h2>
             <p className="text-body-2s text-theme-secondary">
-              Watch agents work together to analyze your investment
+              Watch agents work together to analyze your signals
             </p>
           </div>
           <div className="flex items-center gap-2">

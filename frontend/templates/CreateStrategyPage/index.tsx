@@ -26,6 +26,7 @@ import {
 import TechnicalStrategySelector from "./TechnicalStrategySelector";
 import { getAllAgents } from "../../services/agents.service";
 import { createStrategy } from "../../services/strategy.service";
+import { getUserId } from "../../utils/userStorage";
 
 const CreateStrategyPage = () => {
   const router = useRouter();
@@ -342,7 +343,15 @@ plot(sma50, color=color.red)`;
       console.log("Form data:", formData);
       console.log("Strategy data to send:", strategyData);
 
-      const userId = "68f4f45901332fe98e0ac7e0"; // Hardcoded user ID for now
+      const userId = getUserId();
+
+      if (!userId) {
+        console.error("No user ID found. Please log in.");
+        alert("Please log in to create a strategy.");
+        router.push("/sign-in");
+        return;
+      }
+
       const response = await createStrategy(userId, strategyData);
 
       console.log("Strategy created successfully:", response);
