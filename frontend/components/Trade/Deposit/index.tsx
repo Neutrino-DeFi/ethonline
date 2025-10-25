@@ -5,19 +5,29 @@ import { useWallets } from "@privy-io/react-auth";
 
 type DepositProps = {};
 
+// Hyperliquid testnet
+// const VAULT_ADDRESS =
+//   "0x08cfc1B6b2dCF36A1480b99353A354AA8AC56f89" as `0x${string}`;
+
+// Hyperliquid mainnet
 const VAULT_ADDRESS =
-  "0x08cfc1B6b2dCF36A1480b99353A354AA8AC56f89" as `0x${string}`;
+  "0x2Df1c51E09aECF9cacB7bc98cB1742757f163dF7" as `0x${string}`;
+
 // USDC contract address on Arbitrum Sepolia
-const USDC_ADDRESS = "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d";
+// const USDC_ADDRESS = "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d";
+
+// USDC contract address on Arbitrum One
+const USDC_ADDRESS = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831";
 
 // ERC20 Transfer ABI for the vault deposit
 const TRANSFER_ABI = [
   {
-    name: "transferFrom",
+    // name: "transferFrom",
+    name: "transfer",
     type: "function",
     stateMutability: "nonpayable",
     inputs: [
-      { name: "from", type: "address" },
+      // { name: "from", type: "address" },
       { name: "to", type: "address" },
       { name: "amount", type: "uint256" },
     ],
@@ -38,6 +48,16 @@ const Deposit = ({}: DepositProps) => {
       if (wallets[0]) {
         try {
           const provider = await wallets[0].getEthereumProvider();
+          // Switch to the correct network if needed
+          // await provider.request({
+          //   method: "wallet_switchEthereumChain",
+          //   params: [{ chainId: "0x89" }], // 0x89 = 137 for Polygon mainnet
+          // });
+
+          const chainId = await provider.request({ method: "eth_chainId" });
+
+          // setProvider(provider);
+          console.log("✅✅Setting Nexus provider:", chainId);
           setProvider(provider);
           setProviderReady(true);
         } catch (error) {
@@ -67,7 +87,8 @@ const Deposit = ({}: DepositProps) => {
     const amountInWei = BigInt(Math.floor(parseFloat(amount) * 1_000_000));
 
     return {
-      functionParams: [userAddress, VAULT_ADDRESS, amountInWei],
+      // functionParams: [userAddress, VAULT_ADDRESS, amountInWei],
+      functionParams: [VAULT_ADDRESS, amountInWei],
     };
   };
 
@@ -127,10 +148,12 @@ const Deposit = ({}: DepositProps) => {
         <BridgeAndExecuteButton
           contractAddress={USDC_ADDRESS as `0x${string}`}
           contractAbi={TRANSFER_ABI}
-          functionName="transferFrom"
+          // functionName="transferFrom"
+          functionName="transfer"
           buildFunctionParams={buildFunctionParams}
           prefill={{
-            toChainId: 421614, // Arbitrum Sepolia
+            // toChainId: 421614, // Arbitrum Sepolia
+            toChainId: 42161, // Arbitrum
             token: "USDC",
             amount: amount,
           }}
