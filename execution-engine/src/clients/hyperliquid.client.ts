@@ -2,14 +2,14 @@ import * as hl from "@nktkas/hyperliquid";
 import { privateKeyToAccount } from "viem/accounts";
 
 // Set up transport (HTTP or WS) — use testnet flag if needed
-const transport = new hl.HttpTransport({ isTestnet: true });
+const transport = new hl.HttpTransport();
 
 // Info client for read-only data (balance etc.)
 const infoClient = new hl.InfoClient({ transport });
 
 enum AssetIndex {
-    BTC = 3,
-    ETH = 4,
+    BTC = 0,
+    ETH = 1,
 }
 
 export class HyperliquidClient {
