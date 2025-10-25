@@ -108,3 +108,24 @@
         @apply !text-theme-tertiary;
     }
 }
+
+/* Ensure Avail Nexus modals appear above all other modals and centered */
+[role="dialog"]:has([class*="avail"]),
+[role="dialog"]:has([class*="nexus"]),
+div[class*="headlessui-portal-root"] > div:has([class*="avail"]),
+div[class*="headlessui-portal-root"] > div:has([class*="nexus"]) {
+    z-index: 9999 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: fixed !important;
+    inset: 0 !important;
+}
+
+/* Center the actual Nexus modal content */
+[role="dialog"]:has([class*="avail"]) > div,
+[role="dialog"]:has([class*="nexus"]) > div,
+div[class*="headlessui-portal-root"] > div:has([class*="avail"]) > div,
+div[class*="headlessui-portal-root"] > div:has([class*="nexus"]) > div {
+    margin: auto !important;
+}

@@ -1,6 +1,9 @@
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { Express } from 'express';
+import { config } from '../config/environment';
+
+const serverUrl = config.swaggerUrl;
 
 const options = {
   definition: {
@@ -16,7 +19,7 @@ const options = {
     },
     servers: [
       {
-        url: 'http://localhost:4000',
+        url: serverUrl,
         description: 'Development server',
       },
     ],
@@ -180,12 +183,15 @@ const options = {
         name: 'Users',
         description: 'User endpoints',
       },
+      { name: 'Hyperliquid', description: 'Hyperliquid API endpoints (balance, orders)' },
     ],
   },
   apis: [
     './src/routes/*.ts',
+    './src/routes/*/*/.ts',
     './src/routes/*/index.ts',
     './src/controllers/*/*.ts',
+    './src/controllers/*/*/*.ts',
   ],
 };
 

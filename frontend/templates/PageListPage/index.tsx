@@ -10,7 +10,7 @@ const links = [
         url: "/greed-index",
     },
     {
-        title: "My assets",
+        title: "Dashboard",
         url: "/my-assets",
     },
     {

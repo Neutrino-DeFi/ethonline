@@ -25,7 +25,8 @@ const PerformanceMetrics = ({ strategy }: PerformanceMetricsProps) => {
                         strategy.totalPnl >= 0 ? "text-primary-2" : "text-theme-red"
                     }`}
                 >
-                    {strategy.totalPnl >= 0 ? "+" : ""}${strategy.totalPnl.toFixed(2)}
+                    {/* {strategy.totalPnl >= 0 ? "+" : ""}${strategy.totalPnl.toFixed(2) || 0} */}
+                    {strategy.totalPnl >= 0 ? "+" : ""}${0}
                 </div>
                 <div
                     className={`text-caption-1 ${
@@ -33,14 +34,16 @@ const PerformanceMetrics = ({ strategy }: PerformanceMetricsProps) => {
                     }`}
                 >
                     {strategy.totalPnlPercentage >= 0 ? "+" : ""}
-                    {strategy.totalPnlPercentage.toFixed(2)}%
+                    {/* {strategy.totalPnlPercentage.toFixed(2)}% */}
+                    {0}%
                 </div>
             </div>
 
             <div className="p-4 bg-theme-on-surface-1 rounded-xl">
                 <div className="text-caption-2 text-theme-tertiary mb-2">Win Rate</div>
                 <div className="text-h5 font-semibold text-theme-primary mb-1">
-                    {strategy.winRate.toFixed(1)}%
+                    {/* {strategy.winRate.toFixed(1)}% */}
+                    {0}%
                 </div>
                 <div className="text-caption-1 text-theme-secondary">
                     {strategy.winningTrades} / {strategy.totalTrades} trades
@@ -50,7 +53,8 @@ const PerformanceMetrics = ({ strategy }: PerformanceMetricsProps) => {
             <div className="p-4 bg-theme-on-surface-1 rounded-xl">
                 <div className="text-caption-2 text-theme-tertiary mb-2">Accuracy</div>
                 <div className="text-h5 font-semibold text-theme-primary mb-1">
-                    {strategy.accuracy.toFixed(1)}%
+                    {/* {strategy.accuracy.toFixed(1)}% */}
+                    {0}%
                 </div>
                 <div className="text-caption-1 text-theme-secondary">
                     AI prediction accuracy
@@ -62,10 +66,12 @@ const PerformanceMetrics = ({ strategy }: PerformanceMetricsProps) => {
                     Open Positions
                 </div>
                 <div className="text-h5 font-semibold text-theme-primary mb-1">
-                    {strategy.openPositions.length}
+                    {/* {strategy.openPositions.length} */}
+                    {0}
                 </div>
                 <div className="text-caption-1 text-theme-secondary">
-                    {strategy.closedPositions.length} closed
+                    {/* {strategy.closedPositions.length} closed */}
+                    {0} closed
                 </div>
             </div>
         </div>

@@ -101,6 +101,7 @@ export const getUserStrategies = async (req: Request, res: Response): Promise<vo
 
     const strategiesResponse = strategies.map(strategy => ({
       _id: strategy._id,
+      userId: strategy.userId,
       name: strategy.name,
       description: strategy.description,
       risk: strategy.risk,

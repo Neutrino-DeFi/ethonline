@@ -17,7 +17,7 @@ const privy = new PrivyClient(
  * @swagger
  * /api/v1/user/register:
  *   post:
- *     summary: Register a new user
+ *     summary: Register or retrieve an existing user
  *     tags: [Users]
  *     requestBody:
  *       required: true
@@ -34,8 +34,8 @@ const privy = new PrivyClient(
  *               walletAddress:
  *                 type: string
  *     responses:
- *       201:
- *         description: User created
+ *       200:
+ *         description: User retrieved or created successfully
  *       401:
  *         description: Unauthorized
  *       500:
@@ -62,18 +62,40 @@ export const registerUser = async (req: Request, res: Response) => {
   //   res.status(401).json({ error: "Unauthorized" });
   // }
 
-  const { uniqueWalletId, walletAddress } =
-    req.body; // did:privy:cmgo0862z03fml50c5bushsec, walletAddress
+  try {
+    const { uniqueWalletId, walletAddress, apiWallet } = req.body;
 
-  const newUser = new User({
-    uniqueWalletId,
-    walletAddress,
-    createdAt: new Date(),
-    lastLoginAt: new Date(),
-  });
+    if (!uniqueWalletId || !walletAddress) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
 
-  newUser
-    .save()
-    .then((user) => res.status(201).json(user))
-    .catch((err) => res.status(500).json({ error: err.message }));
+     if (!apiWallet?.address || !apiWallet?.privateKey) {
+      return res.status(400).json({ error: "apiWallet.address and apiWallet.privateKey are required" });
+    }
+
+    // Check if user already exists
+    let existingUser = await User.findOne({ uniqueWalletId });
+
+    if (existingUser) {
+      // Update last login timestamp
+      existingUser.lastLoginAt = new Date();
+      await existingUser.save();
+      return res.status(200).json(existingUser);
+    }
+
+    // Create new user
+    const newUser = new User({
+      uniqueWalletId,
+      walletAddress,
+      apiWallet,
+      createdAt: new Date(),
+      lastLoginAt: new Date(),
+    });
+
+    const savedUser = await newUser.save();
+    return res.status(201).json(savedUser);
+  } catch (err: any) {
+    console.error("Error registering user:", err);
+    return res.status(500).json({ error: err.message });
+  }
 };

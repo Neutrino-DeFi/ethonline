@@ -6,7 +6,7 @@ import Modal from "@/components/Modal";
 import { Strategy } from "@/types/strategy";
 
 type StrategyListProps = {
-    strategies: Strategy[];
+    strategies: any[];
     onViewStrategy: (strategyId: string) => void;
     onDeleteStrategy?: (strategyId: string) => void;
 };
@@ -64,9 +64,9 @@ const StrategyList = ({ strategies, onViewStrategy, onDeleteStrategy }: Strategy
             <div className="space-y-4">
                 {strategies.map((strategy) => (
                     <div
-                        key={strategy.id}
+                        key={strategy._id}
                         className="p-6 bg-theme-on-surface-1 rounded-2xl border border-theme-stroke hover:border-primary-1 transition-all cursor-pointer group"
-                        onClick={() => onViewStrategy(strategy.id)}
+                        onClick={() => onViewStrategy(strategy._id)}
                     >
                         <div className="flex items-start justify-between mb-4">
                             <div className="flex-1">
@@ -76,10 +76,10 @@ const StrategyList = ({ strategies, onViewStrategy, onDeleteStrategy }: Strategy
                                     </h3>
                                     <span
                                         className={`px-3 py-1 rounded-lg text-caption-2 font-semibold uppercase ${getStatusColor(
-                                            strategy.status
+                                            strategy.status || "active"
                                         )}`}
                                     >
-                                        {strategy.status}
+                                        {strategy.status || "active"}
                                     </span>
                                     {strategy.visibility === "public" && (
                                         <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-theme-on-surface-2 text-caption-2 text-theme-secondary">
@@ -94,12 +94,10 @@ const StrategyList = ({ strategies, onViewStrategy, onDeleteStrategy }: Strategy
                                 <div className="flex items-center gap-4 text-caption-1 text-theme-tertiary">
                                     <span>
                                         Risk:{" "}
-                                        <span className={`font-semibold ${getRiskColor(strategy.riskLevel)}`}>
-                                            {strategy.riskLevel.toUpperCase()}
+                                        <span className={`font-semibold ${getRiskColor(strategy.risk?.toLowerCase() || "medium")}`}>
+                                            {(strategy.risk || "Medium").toUpperCase()}
                                         </span>
                                     </span>
-                                    <span>•</span>
-                                    <span>Deposit: ${strategy.depositAmount.toLocaleString()}</span>
                                     <span>•</span>
                                     <span>
                                         Created: {new Date(strategy.createdAt).toLocaleDateString()}
@@ -108,7 +106,7 @@ const StrategyList = ({ strategies, onViewStrategy, onDeleteStrategy }: Strategy
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
-                                    onClick={(e) => handleDeleteClick(e, strategy.id)}
+                                    onClick={(e) => handleDeleteClick(e, strategy._id)}
                                     className="p-2 rounded-lg hover:bg-theme-red/10 transition-colors group/delete"
                                     title="Delete strategy"
                                 >
@@ -129,18 +127,10 @@ const StrategyList = ({ strategies, onViewStrategy, onDeleteStrategy }: Strategy
                             <div className="text-caption-2 text-theme-tertiary mb-1">
                                 Total P&L
                             </div>
-                            <div
-                                className={`text-title-2 font-semibold ${
-                                    strategy.totalPnl >= 0
-                                        ? "text-primary-2"
-                                        : "text-theme-red"
-                                }`}
-                            >
-                                {strategy.totalPnl >= 0 ? "+" : ""}$
-                                {strategy.totalPnl.toFixed(2)}
+                            <div className="text-title-2 font-semibold text-primary-2">
+                                +$0.00
                                 <span className="text-caption-1 ml-1">
-                                    ({strategy.totalPnlPercentage >= 0 ? "+" : ""}
-                                    {strategy.totalPnlPercentage.toFixed(2)}%)
+                                    (+0.00%)
                                 </span>
                             </div>
                         </div>
@@ -149,7 +139,7 @@ const StrategyList = ({ strategies, onViewStrategy, onDeleteStrategy }: Strategy
                                 Win Rate
                             </div>
                             <div className="text-title-2 font-semibold text-theme-primary">
-                                {strategy.winRate.toFixed(1)}%
+                                0.0%
                             </div>
                         </div>
                         <div>
@@ -157,7 +147,7 @@ const StrategyList = ({ strategies, onViewStrategy, onDeleteStrategy }: Strategy
                                 Accuracy
                             </div>
                             <div className="text-title-2 font-semibold text-theme-primary">
-                                {strategy.accuracy.toFixed(1)}%
+                                0.0%
                             </div>
                         </div>
                         <div>
@@ -165,7 +155,7 @@ const StrategyList = ({ strategies, onViewStrategy, onDeleteStrategy }: Strategy
                                 Open Positions
                             </div>
                             <div className="text-title-2 font-semibold text-theme-primary">
-                                {strategy.openPositions.length}
+                                0
                             </div>
                         </div>
                         <div>
@@ -173,23 +163,23 @@ const StrategyList = ({ strategies, onViewStrategy, onDeleteStrategy }: Strategy
                                 Total Trades
                             </div>
                             <div className="text-title-2 font-semibold text-theme-primary">
-                                {strategy.totalTrades}
+                                0
                             </div>
                         </div>
                     </div>
 
-                    {strategy.technicalStrategies.length > 0 && (
+                    {strategy.agentConfigs && strategy.agentConfigs.length > 0 && (
                         <div className="mt-4 pt-4 border-t border-theme-stroke">
                             <div className="text-caption-2 text-theme-tertiary mb-2">
-                                Technical Strategies:
+                                AI Agents:
                             </div>
                             <div className="flex flex-wrap gap-2">
-                                {strategy.technicalStrategies.map((tech) => (
+                                {strategy.agentConfigs.map((agent: any) => (
                                     <span
-                                        key={tech.id}
+                                        key={agent._id}
                                         className="px-3 py-1 rounded-lg bg-theme-on-surface-2 text-caption-1 text-theme-secondary"
                                     >
-                                        {tech.name}
+                                        {agent.agentId?.name || "Agent"} ({(agent.votingPower * 100).toFixed(0)}%)
                                     </span>
                                 ))}
                             </div>

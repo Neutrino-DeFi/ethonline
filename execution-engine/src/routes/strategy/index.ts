@@ -3,6 +3,7 @@ import {
   createStrategy,
   getUserStrategies,
   getStrategyById,
+  getByUserIdAndStrategyId,
   updateStrategy,
   deleteStrategy,
 } from '../../controllers/strategy';
@@ -26,6 +27,8 @@ router.get('/user/:userId', asyncHandler(getUserStrategies));
 
 // GET /api/strategy/:strategyId - Fetch single strategy with all agent configs populated
 router.get('/strategy/:strategyId', asyncHandler(getStrategyById));
+// GET /api/strategies/user/:userId/strategy/:strategyId - Fetch single strategy by userId and strategyId with all agent configs populated
+router.get('/user/:userId/strategy/:strategyId', asyncHandler(getByUserIdAndStrategyId));
 
 // PUT /api/strategy/:strategyId - Update strategy metadata or its agent configs
 router.put('/strategy/:strategyId', asyncHandler(updateStrategy));

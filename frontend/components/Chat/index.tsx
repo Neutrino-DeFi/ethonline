@@ -51,7 +51,7 @@ const Chat = ({ children }: ChatProps) => {
     return (
         <div className="relative flex h-[calc(100svh-8.5rem)] xl:overflow-hidden xl:rounded-2xl md:h-[calc(100svh-11rem)] md:-mb-2">
             <div className="card flex flex-col w-[calc(100%-21.75rem)] 2xl:w-[calc(100%-20.5rem)] xl:w-full">
-                <div className="flex mb-6 md:mb-4">
+                {/* <div className="flex mb-6 md:mb-4">
                     <Select
                         className="min-w-[8.5rem]"
                         value={mode}
@@ -67,7 +67,7 @@ const Chat = ({ children }: ChatProps) => {
                             name="arrow-right-fat"
                         />
                     </button>
-                </div>
+                </div> */}
                 <div className="flex grow overflow-auto -mx-6">
                     {children ? (
                         <div className="px-12 py-4 space-y-6 3xl:px-6 3xl:py-0">
@@ -90,7 +90,7 @@ const Chat = ({ children }: ChatProps) => {
                     logo
                 />
             </div>
-            <History visible={visible} onClose={() => setVisible(false)} />
+            {/* <History visible={visible} onClose={() => setVisible(false)} /> */}
         </div>
     );
 };

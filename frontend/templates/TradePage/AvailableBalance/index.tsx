@@ -1,69 +1,92 @@
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { useState, useEffect } from "react";
+import { usePrivy } from "@privy-io/react-auth";
 import CurrencyFormat from "@/components/CurrencyFormat";
-import Percent from "@/components/Percent";
-
-const data = [
-    { name: "ETH", color: "#FD8965", value: 100 },
-    { name: "XRP", color: "#FFB560", value: 300 },
-    { name: "SOL", color: "#E5C7F7", value: 250 },
-    { name: "BTC", color: "#FAD5F4", value: 200 },
-    { name: "GOM", color: "#C7DEFF", value: 400 },
-];
-
-const COLORS = ["#FD8965", "#FFB560", "#E5C7F7", "#FAD5F4", "#C7DEFF"];
+import Tooltip from "@/components/Tooltip";
+import { getUserPositions } from "../../../services/hyperliquidPortfolio.service";
 
 type AvailableBalanceProps = {};
 
-const AvailableBalance = ({}: AvailableBalanceProps) => (
+const AvailableBalance = ({}: AvailableBalanceProps) => {
+  const [withdrawable, setWithdrawable] = useState<number>(0);
+  const [currentMargin, setCurrentMargin] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(true);
+  const { authenticated, user } = usePrivy();
+
+  useEffect(() => {
+    const fetchPortfolioData = async () => {
+      if (authenticated && user) {
+        try {
+          setLoading(true);
+          // Get wallet address from Privy user
+          const wallet = user.linkedAccounts?.find(
+            (account) => account.type === "wallet"
+          );
+
+          if (wallet && "address" in wallet) {
+            const positions = await getUserPositions(wallet.address);
+            if (positions?.withdrawable) {
+              setWithdrawable(parseFloat(positions.withdrawable));
+            }
+
+            // Calculate Current Margin = totalMarginUsed + crossMarginSummary.totalMarginUsed
+            const isolatedMargin = positions?.marginSummary?.totalMarginUsed
+              ? parseFloat(positions.marginSummary.totalMarginUsed)
+              : 0;
+            const crossMargin = positions?.crossMarginSummary?.totalMarginUsed
+              ? parseFloat(positions.crossMarginSummary.totalMarginUsed)
+              : 0;
+            setCurrentMargin(isolatedMargin + crossMargin);
+          }
+        } catch (error) {
+          console.error("Error fetching portfolio data:", error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchPortfolioData();
+  }, [authenticated, user]);
+
+  return (
     <div className="card-sidebar">
-        <div className="mb-6 text-title-1s md:mb-4 md:text-[1.125rem]">
-            Available balance
+      <div className="mb-6 text-title-1s md:mb-4 md:text-[1.125rem]">
+        Available balance
+      </div>
+      {loading ? (
+        <div className="text-base-1 text-theme-secondary">Loading...</div>
+      ) : !authenticated ? (
+        <div className="text-base-1 text-theme-secondary">
+          Please connect your wallet
         </div>
-        <CurrencyFormat className="text-h3" currency="$" value={3200.8} />
-        <Percent className="mb-6 text-base-2" value={12.32} />
-        <div className="relative w-[15.75rem] h-[15.75rem] mx-auto">
-            <ResponsiveContainer width="100%" height="100%">
-                <PieChart width={290} height={290}>
-                    <Pie
-                        data={data}
-                        cx={122}
-                        cy={122}
-                        innerRadius={70}
-                        outerRadius={124}
-                        labelLine={false}
-                        dataKey="value"
-                        paddingAngle={2}
-                        stroke="transparent"
-                    >
-                        {data.map((entry, index) => (
-                            <Cell
-                                key={`cell-${index}`}
-                                fill={COLORS[index % COLORS.length]}
-                            />
-                        ))}
-                    </Pie>
-                </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-base-1s">
-                0.5 BTC
-            </div>
-        </div>
-        <div className="flex flex-wrap justify-center mt-6 gap-3 2xl:-mx-2 2xl:gap-2">
-            {data.map((item, index) => (
-                <div
-                    className="flex items-center text-caption-2m text-theme-secondary"
-                    key={index}
-                >
-                    <div
-                        className="shrink-0 w-3 h-3 mr-2 rounded 2xl:mr-1.5"
-                        style={{ backgroundColor: item.color }}
-                    ></div>
-                    {item.name}
+      ) : (
+        <>
+          <CurrencyFormat
+            className="text-h3 mb-8"
+            currency="$"
+            value={withdrawable}
+          />
+
+          <div className="pt-6 border-t border-theme-stroke">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-base-2 text-theme-secondary mb-1">
+                  Current Margin
                 </div>
-            ))}
-        </div>
-        <button className="btn-gray w-full mt-6">View all assets</button>
+                <CurrencyFormat
+                  className="text-title-1s"
+                  currency="$"
+                  value={currentMargin}
+                  sameColor
+                />
+              </div>
+              <Tooltip title="Current Margin is the sum of isolated margin and cross-margin used across all positions" />
+            </div>
+          </div>
+        </>
+      )}
     </div>
-);
+  );
+};
 
 export default AvailableBalance;

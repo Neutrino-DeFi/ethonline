@@ -1,5 +1,6 @@
 import { Menu, MenuButton, MenuItems, Transition } from "@headlessui/react";
-import { useColorMode } from "@chakra-ui/color-mode";
+// import { useColorMode } from "@chakra-ui/color-mode";
+import { useColorMode } from "@chakra-ui/react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -95,8 +96,8 @@ const User = ({ className }: UserProps) => {
             </div>
           </div>
           <div className="mb-2 space-y-1">
-            <NavLink title="Settings" icon="settings" url="/settings" />
-            <NavLink title="Contact support" icon="support" url="/support" />
+            {/* <NavLink title="Settings" icon="settings" url="/settings" /> */}
+            {/* <NavLink title="Contact support" icon="support" url="/support" /> */}
             <div className="group flex items-center h-12 px-4 rounded-xl transition-colors hover:bg-theme-on-surface-2">
               <Icon
                 className="shrink-0 mr-4 fill-theme-secondary transition-colors group-hover:fill-theme-primary"
@@ -112,7 +113,7 @@ const User = ({ className }: UserProps) => {
                 theme
               />
             </div>
-            <NavLink title="News" icon="news" url="/news" />
+            {/* <NavLink title="News" icon="news" url="/news" /> */}
           </div>
           <button
             onClick={handleLogout}

@@ -7,7 +7,7 @@ import AvailableBalance from "./AvailableBalance";
 
 const TradePage = () => {
     return (
-        <Layout title="Trade">
+        <Layout title="Trade History">
             <div className="flex items-start lg:block">
                 <div className="card grow">
                     <Prices />
