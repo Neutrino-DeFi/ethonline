@@ -7,7 +7,7 @@ import { arbitrumSepolia } from "viem/chains";
 
 type DepositProps = {};
 
-const VAULT_ADDRESS = "0x08cfc1B6b2dCF36A1480b99353A354AA8AC56f89";
+const VAULT_ADDRESS = "0x2Df1c51E09aECF9cacB7bc98cB1742757f163dF7";
 
 const Deposit = ({}: DepositProps) => {
     const [amount, setAmount] = useState<string>("");
@@ -53,7 +53,7 @@ const Deposit = ({}: DepositProps) => {
             });
 
             // USDC contract address on Arbitrum Sepolia
-            const USDC_ADDRESS = "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d";
+            const USDC_ADDRESS = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831";
 
             // ERC20 Transfer ABI
             const transferAbi = [
@@ -141,7 +141,7 @@ const Deposit = ({}: DepositProps) => {
                     ) : (
                         <BridgeButton
                             prefill={{
-                                chainId: 421614, // Arbitrum Sepolia
+                                chainId: 42161, // Arbitrum Sepolia
                                 token: "USDC",
                                 amount: amount,
                             }}

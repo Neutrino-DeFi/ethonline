@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import Icon from "@/components/Icon";
+import { getUserId } from "../../../utils/userStorage";
+import { getUserStrategies } from "../../../services/strategy.service";
 
 type MessageContent = {
   type: "supervisor" | "agent" | "supervisor_final" | "error" | "unknown";
@@ -31,13 +33,16 @@ type AgentChatProps = {
 };
 
 const AgentChat = ({
-  websocketUrl = "ws://127.0.0.1:8000/ws/chat",
+  // websocketUrl = "ws://127.0.0.1:8000/ws/chat",
+  websocketUrl = "ws://98.91.138.204:8000/ws/chat",
   externalMessage,
-  onMessageSent
+  onMessageSent,
 }: AgentChatProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [threadId, setThreadId] = useState<string | null>(null);
   const ws = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const prevMessageRef = useRef<string>("");
@@ -51,39 +56,35 @@ const AgentChat = ({
     scrollToBottom();
   }, [messages]);
 
-  // Helper function to convert agent names from decision format to agent_states format
-  const mapAgentName = (decisionAgentName: string, availableAgentKeys: string[]): string => {
-    // First, try exact match (case-sensitive)
-    if (availableAgentKeys.includes(decisionAgentName)) {
-      return decisionAgentName;
-    }
+  // Fetch user ID and thread ID (strategy ID) on mount
+  useEffect(() => {
+    const fetchUserAndStrategy = async () => {
+      const currentUserId = getUserId();
+      if (!currentUserId) {
+        console.error("No user ID found. Please log in.");
+        return;
+      }
 
-    // Try common mappings
-    const mapping: Record<string, string> = {
-      news_sentiment_agent: "NewsSentimentAgent",
-      finance_agent: "FinanceAgent",
-      trade_executor_agent: "trade_executor_agent",
+      setUserId(currentUserId);
+
+      try {
+        const strategies = await getUserStrategies(currentUserId);
+        if (strategies && strategies.length > 0) {
+          // Use the first strategy as thread_id
+          setThreadId(strategies[0]._id);
+          console.log("Using strategy as thread_id:", strategies[0]._id);
+        } else {
+          console.warn(
+            "No strategies found for user. Create a strategy first."
+          );
+        }
+      } catch (error) {
+        console.error("Failed to fetch strategies:", error);
+      }
     };
 
-    if (
-      mapping[decisionAgentName] &&
-      availableAgentKeys.includes(mapping[decisionAgentName])
-    ) {
-      return mapping[decisionAgentName];
-    }
-
-    // Try case-insensitive match
-    const lowerDecisionName = decisionAgentName.toLowerCase();
-    const found = availableAgentKeys.find(
-      (key) => key.toLowerCase() === lowerDecisionName
-    );
-    if (found) {
-      return found;
-    }
-
-    // Last resort: return the decision name as-is
-    return decisionAgentName;
-  };
+    fetchUserAndStrategy();
+  }, []);
 
   // Helper function to make agent names more readable
   const formatAgentNameForDisplay = (agentName: string): string => {
@@ -98,11 +99,20 @@ const AgentChat = ({
   };
 
   const formatResponse = (data: any): MessageContent => {
-    // Handle Supervisor responses
-    if (data.supervisor) {
-      const supervisor = data.supervisor;
+    // Extract state from chunk response
+    const state = data.state;
+    if (!state) {
+      return {
+        type: "unknown",
+        text: JSON.stringify(data, null, 2),
+      };
+    }
 
-      // Check if this is the final response (current_task is null)
+    // Handle Supervisor responses
+    if (state.supervisor) {
+      const supervisor = state.supervisor;
+
+      // Check if this is the final response (current_task is null and final_output exists)
       if (supervisor.current_task === null && supervisor.final_output) {
         return {
           type: "supervisor_final",
@@ -125,70 +135,34 @@ const AgentChat = ({
       };
     }
 
-    // Handle Agent responses (sentiment_agent, finance_agent, trade_executor_agent, etc.)
-    const agentKey = Object.keys(data).find((key) => key.endsWith("_agent"));
+    // Handle Agent responses (sentiment_agent, finance_agent, trade_agent, etc.)
+    const agentKey = Object.keys(state).find((key) => key.endsWith("_agent"));
     if (agentKey) {
-      const agentData = data[agentKey];
+      const agentData = state[agentKey];
       const agentStates = agentData.agent_states;
 
-      // Get the latest decision to know which agent just executed
-      const latestDecision =
-        agentData.decisions[agentData.decisions.length - 1];
-      const selectedAgentFromDecision = latestDecision?.selected_agent;
-
-      console.log("Agent Key:", agentKey);
-      console.log("Selected Agent from Decision:", selectedAgentFromDecision);
-      console.log("Available Agent States:", Object.keys(agentStates));
-
-      // Map the decision agent name to agent_states key format
-      const availableAgentKeys = Object.keys(agentStates);
-      const agentNameInStates = mapAgentName(
-        selectedAgentFromDecision,
-        availableAgentKeys
-      );
-
-      console.log("Mapped Agent Name:", agentNameInStates);
-
-      // Get the specific agent that just ran
-      if (agentStates[agentNameInStates]) {
-        const agentStateArray = agentStates[agentNameInStates];
-        const latestState = agentStateArray[agentStateArray.length - 1];
+      // agent_states is now an array, get the latest one
+      if (agentStates && agentStates.length > 0) {
+        const latestAgentState = agentStates[agentStates.length - 1];
+        const latestDecision =
+          agentData.decisions[agentData.decisions.length - 1];
 
         // Extract tool names
-        const toolNames = latestState.tool_call_response_pair.map(
+        const toolNames = latestAgentState.tool_call_response_pair.map(
           (tool: any) => tool.tool_name
         );
 
-        console.log("Found agent data for:", agentNameInStates);
+        console.log("Found agent data:", latestAgentState.agent_name);
 
         return {
           type: "agent",
-          agentName: formatAgentNameForDisplay(agentNameInStates),
-          agentInput: latestState.agent_input,
+          agentName: formatAgentNameForDisplay(latestAgentState.agent_name),
+          agentInput: latestAgentState.agent_input,
           toolsUsed: toolNames,
-          agentOutput: latestState.agent_output,
+          agentOutput: latestAgentState.agent_output,
           timestamp: latestDecision?.timestamp,
         };
       }
-
-      // Fallback: if mapping fails, use the first available agent (shouldn't happen normally)
-      console.warn("Could not find agent in states, using fallback");
-      const firstAgentName = Object.keys(agentStates)[0];
-      const agentStateArray = agentStates[firstAgentName];
-      const latestState = agentStateArray[agentStateArray.length - 1];
-
-      const toolNames = latestState.tool_call_response_pair.map(
-        (tool: any) => tool.tool_name
-      );
-
-      return {
-        type: "agent",
-        agentName: formatAgentNameForDisplay(firstAgentName),
-        agentInput: latestState.agent_input,
-        toolsUsed: toolNames,
-        agentOutput: latestState.agent_output,
-        timestamp: latestDecision?.timestamp,
-      };
     }
 
     // Fallback for unknown format
@@ -216,22 +190,27 @@ const AgentChat = ({
         // Check if this is the final signal
         if (data.type === "final") {
           setIsProcessing(false);
-          console.log("✅ Workflow completed");
+          console.log("✅ Workflow completed. Ready for next message.");
           return;
         }
 
-        // Format the message based on response type
-        const formattedMessage = formatResponse(data);
+        // Handle chunk type responses
+        if (data.type === "chunk" && data.state) {
+          // Format the message based on response type
+          const formattedMessage = formatResponse(data);
 
-        setMessages((prev) => [
-          ...prev,
-          {
-            from: "server",
-            content: formattedMessage,
-            raw: data,
-            timestamp: new Date().toLocaleTimeString(),
-          },
-        ]);
+          setMessages((prev) => [
+            ...prev,
+            {
+              from: "server",
+              content: formattedMessage,
+              raw: data,
+              timestamp: new Date().toLocaleTimeString(),
+            },
+          ]);
+        } else {
+          console.warn("Unknown message type:", data);
+        }
       } catch (error) {
         console.error("Error parsing message:", error);
         setMessages((prev) => [
@@ -268,7 +247,17 @@ const AgentChat = ({
       ws.current.readyState === WebSocket.OPEN &&
       messageText.trim() !== ""
     ) {
-      const payload = { message: messageText };
+      if (!userId || !threadId) {
+        console.error("Cannot send message: userId or threadId is missing");
+        alert("Please wait for initialization or create a strategy first.");
+        return;
+      }
+
+      const payload = {
+        user_id: userId,
+        thread_id: threadId,
+        message: messageText,
+      };
       console.log("Sending:", payload);
       ws.current.send(JSON.stringify(payload));
       setMessages((prev) => [
@@ -288,7 +277,11 @@ const AgentChat = ({
 
   // Handle external message from parent component
   useEffect(() => {
-    if (externalMessage && externalMessage.trim() !== "" && externalMessage !== prevMessageRef.current) {
+    if (
+      externalMessage &&
+      externalMessage.trim() !== "" &&
+      externalMessage !== prevMessageRef.current
+    ) {
       prevMessageRef.current = externalMessage;
       sendMessage(externalMessage);
     }
@@ -300,7 +293,9 @@ const AgentChat = ({
         <div className="flex justify-end">
           <div className="max-w-[80%] bg-theme-brand text-theme-white-fixed rounded-2xl px-4 py-3">
             <p className="text-body-1m">{msg.text}</p>
-            <span className="text-caption-1m opacity-70 mt-1 block">{msg.timestamp}</span>
+            <span className="text-caption-1m opacity-70 mt-1 block">
+              {msg.timestamp}
+            </span>
           </div>
         </div>
       );
@@ -319,30 +314,46 @@ const AgentChat = ({
 
           <div className="flex-1 max-w-[85%]">
             <div className="flex items-baseline gap-2 mb-1">
-              <span className="text-body-1s text-theme-primary">Supervisor Agent</span>
+              <span className="text-body-1s text-theme-primary">
+                Supervisor Agent
+              </span>
             </div>
 
             <div className="rounded-2xl px-4 py-3 bg-theme-on-surface border border-theme-stroke space-y-2">
               <div>
-                <span className="text-body-2s text-theme-secondary">Current Task:</span>
-                <p className="text-body-1m text-theme-primary mt-1">{content.currentTask}</p>
+                <span className="text-body-2s text-theme-secondary">
+                  Current Task:
+                </span>
+                <p className="text-body-1m text-theme-primary mt-1">
+                  {content.currentTask}
+                </p>
               </div>
 
               <div>
-                <span className="text-body-2s text-theme-secondary">Selected Agent:</span>
+                <span className="text-body-2s text-theme-secondary">
+                  Selected Agent:
+                </span>
                 <span className="ml-2 px-2 py-1 bg-theme-purple/10 text-theme-purple rounded text-caption-1m">
                   {content.selectedAgent}
                 </span>
               </div>
 
               <div>
-                <span className="text-body-2s text-theme-secondary">Reasoning:</span>
-                <p className="text-body-1m text-theme-tertiary mt-1 italic">{content.reasoning}</p>
+                <span className="text-body-2s text-theme-secondary">
+                  Reasoning:
+                </span>
+                <p className="text-body-1m text-theme-tertiary mt-1 italic">
+                  {content.reasoning}
+                </p>
               </div>
 
               <div className="flex items-center justify-between pt-2 border-t border-theme-stroke">
-                <span className="text-caption-1m text-theme-tertiary">Step {content.step}</span>
-                <span className="text-caption-1m text-theme-tertiary">{content.timestamp}</span>
+                <span className="text-caption-1m text-theme-tertiary">
+                  Step {content.step}
+                </span>
+                <span className="text-caption-1m text-theme-tertiary">
+                  {content.timestamp}
+                </span>
               </div>
             </div>
           </div>
@@ -359,17 +370,23 @@ const AgentChat = ({
 
           <div className="flex-1 max-w-[85%]">
             <div className="flex items-baseline gap-2 mb-1">
-              <span className="text-body-1s text-theme-primary">{content.agentName}</span>
+              <span className="text-body-1s text-theme-primary">
+                {content.agentName}
+              </span>
             </div>
 
             <div className="rounded-2xl px-4 py-3 bg-theme-on-surface border border-theme-stroke space-y-2">
               <div>
                 <span className="text-body-2s text-theme-secondary">Task:</span>
-                <p className="text-body-1m text-theme-primary mt-1">{content.agentInput}</p>
+                <p className="text-body-1m text-theme-primary mt-1">
+                  {content.agentInput}
+                </p>
               </div>
 
               <div>
-                <span className="text-body-2s text-theme-secondary">Tools Used:</span>
+                <span className="text-body-2s text-theme-secondary">
+                  Tools Used:
+                </span>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {content.toolsUsed?.map((tool, idx) => (
                     <span
@@ -383,14 +400,18 @@ const AgentChat = ({
               </div>
 
               <div>
-                <span className="text-body-2s text-theme-secondary">Output:</span>
+                <span className="text-body-2s text-theme-secondary">
+                  Output:
+                </span>
                 <div className="mt-2 p-3 bg-theme-surface rounded text-theme-primary text-caption-1m whitespace-pre-wrap max-h-96 overflow-y-auto">
                   {content.agentOutput}
                 </div>
               </div>
 
               <div className="flex justify-end pt-2 border-t border-theme-stroke">
-                <span className="text-caption-1m text-theme-tertiary">{content.timestamp}</span>
+                <span className="text-caption-1m text-theme-tertiary">
+                  {content.timestamp}
+                </span>
               </div>
             </div>
           </div>
@@ -407,11 +428,13 @@ const AgentChat = ({
 
           <div className="flex-1 max-w-[85%]">
             <div className="flex items-baseline gap-2 mb-1">
-              <span className="text-body-1s text-theme-primary">Task Completed</span>
+              <span className="text-body-1s text-theme-primary">
+                Task Completed
+              </span>
             </div>
 
             <div className="rounded-2xl px-4 py-3 bg-theme-green-100 border border-theme-green space-y-2">
-              <div className="p-3 bg-white rounded-lg">
+              <div className="p-3  rounded-lg">
                 {/* <span className="text-body-2s text-theme-secondary block mb-2">
                   Final Output:
                 </span> */}
@@ -421,7 +444,9 @@ const AgentChat = ({
               </div>
 
               <div className="flex justify-end pt-2">
-                <span className="text-caption-1m text-theme-tertiary">{content.timestamp}</span>
+                <span className="text-caption-1m text-theme-tertiary">
+                  {content.timestamp}
+                </span>
               </div>
             </div>
           </div>
@@ -479,7 +504,9 @@ const AgentChat = ({
           {messages.length === 0 && (
             <div className="text-center text-theme-tertiary mt-16">
               <div className="text-6xl mb-4">💬</div>
-              <p className="text-body-1m">Start a conversation with the AI agents</p>
+              <p className="text-body-1m">
+                Start a conversation with the AI agents
+              </p>
               <p className="text-body-2s mt-2">
                 Try asking: "Give me the sentiment of BTC"
               </p>
