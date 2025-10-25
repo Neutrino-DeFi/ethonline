@@ -113,8 +113,10 @@
 [role="dialog"]:has([class*="avail"]),
 [role="dialog"]:has([class*="nexus"]),
 div[class*="headlessui-portal-root"] > div:has([class*="avail"]),
-div[class*="headlessui-portal-root"] > div:has([class*="nexus"]) {
-    z-index: 9999 !important;
+div[class*="headlessui-portal-root"] > div:has([class*="nexus"]),
+div[id*="headlessui-portal-root"] > div:has([class*="avail"]),
+div[id*="headlessui-portal-root"] > div:has([class*="nexus"]) {
+    z-index: 99999 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -122,10 +124,32 @@ div[class*="headlessui-portal-root"] > div:has([class*="nexus"]) {
     inset: 0 !important;
 }
 
+/* Ensure backdrop/overlay for Nexus modals */
+[role="dialog"]:has([class*="avail"])::before,
+[role="dialog"]:has([class*="nexus"])::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+}
+
 /* Center the actual Nexus modal content */
 [role="dialog"]:has([class*="avail"]) > div,
 [role="dialog"]:has([class*="nexus"]) > div,
 div[class*="headlessui-portal-root"] > div:has([class*="avail"]) > div,
-div[class*="headlessui-portal-root"] > div:has([class*="nexus"]) > div {
+div[class*="headlessui-portal-root"] > div:has([class*="nexus"]) > div,
+div[id*="headlessui-portal-root"] > div:has([class*="avail"]) > div,
+div[id*="headlessui-portal-root"] > div:has([class*="nexus"]) > div {
     margin: auto !important;
+    max-width: 90vw !important;
+    max-height: 90vh !important;
+}
+
+/* Ensure all Nexus widget containers have proper z-index */
+[class*="avail"],
+[class*="nexus"],
+[data-avail],
+[data-nexus] {
+    z-index: inherit;
 }
