@@ -3,7 +3,7 @@ import * as hl from "@nktkas/hyperliquid";
 
 // 2. Set up client with transport
 const infoClient = new hl.InfoClient({
-  transport: new hl.HttpTransport({ isTestnet: true }), // or `WebSocketTransport`
+  transport: new hl.HttpTransport(), // or `WebSocketTransport`
 });
 
 export const getOpenOrders = async (user: string) => {

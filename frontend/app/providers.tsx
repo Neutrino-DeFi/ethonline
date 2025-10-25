@@ -25,8 +25,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
       >
         <NexusProvider
           config={{
-            debug: false, // true to view debug logs
-            network: "testnet", // "mainnet" (default) or "testnet"
+            debug: true, // true to view debug logs
+            network: "mainnet", // "mainnet" (default) or "testnet"
           }}
         >
           <ChakraProvider>{children}</ChakraProvider>

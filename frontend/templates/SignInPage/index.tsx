@@ -82,7 +82,7 @@ const SignInPage = () => {
         transport: custom(provider),
       });
 
-      const transport = new hl.HttpTransport({ isTestnet: true });
+      const transport = new hl.HttpTransport();
       const mainExchClient = new hl.ExchangeClient({
         wallet: walletClient,
         transport,
